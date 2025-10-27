@@ -1,0 +1,22 @@
+# ========================================
+# Git Attributes for Obsidian Calendar Events
+# ========================================
+
+# Ensure consistent line endings
+* text=auto eol=lf
+
+# Handle source code as UTF-8
+*.ts text working-tree-encoding=UTF-8
+*.json text working-tree-encoding=UTF-8
+*.md text working-tree-encoding=UTF-8
+*.yml text working-tree-encoding=UTF-8
+*.js text working-tree-encoding=UTF-8
+
+# Mark build artifacts as binary (if ever checked in)
+*.zip binary
+*.map binary
+
+# Exclude from GitHub’s language statistics
+docs/* linguist-documentation
+dist/* linguist-vendored
+build/* linguist-vendored

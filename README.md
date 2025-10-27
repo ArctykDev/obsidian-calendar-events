@@ -1,5 +1,18 @@
 # Obsidian Calendar Events
 
+<p align="center">
+  <a href="https://github.com/ArctykDev/obsidian-calendar-events/releases">
+    <img src="https://img.shields.io/github/v/release/ArctykDev/obsidian-calendar-events?color=4caf50&style=for-the-badge" alt="Version">
+  </a>
+  <a href="https://github.com/ArctykDev/obsidian-calendar-events/actions/workflows/build.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/ArctykDev/obsidian-calendar-events/build.yml?label=Build&style=for-the-badge">
+  </a>
+  <a href="https://github.com/ArctykDev/obsidian-calendar-events/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/ArctykDev/obsidian-calendar-events?style=for-the-badge" alt="License: MIT">
+  </a>
+</p>
+
+
 A lightweight Obsidian plugin that displays events from an **iCal (ICS)** feed directly inside Obsidian.  
 
 Designed for seamless integration with external calendar feeds such as Outlook, Google Calendar, or SharePoint calendar ICS links.
