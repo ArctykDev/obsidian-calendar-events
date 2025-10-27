@@ -1,0 +1,35 @@
+{
+  "name": "obsidian-calendar-events",
+  "version": "1.0.0",
+  "description": "Display and mange iCal (.ics) calendar events directly inside Obsidian.",
+  "main": "main.js",
+  "scripts": {
+    "dev": "rollup -c --watch",
+    "build": "rollup -c",
+    "clean": "rimraf dist build main.js main.js.map"
+  },
+  "keywords": [
+    "obsidian",
+    "plugin",
+    "calendar",
+    "events",
+    "microsoft-graph",
+    "outlook",
+    "tasks",
+    "gmail",
+    "ical"
+  ],
+  "author": "James Hawkins",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "rollup": "^4.12.0",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "moment": "^2.29.4"
+  }
+}

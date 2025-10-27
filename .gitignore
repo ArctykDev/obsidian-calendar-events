@@ -1,0 +1,29 @@
+# Node
+node_modules/
+dist/
+build/
+npm-debug.log
+.DS_Store
+
+# Obsidian plugin build artifacts
+main.js
+main.js.map
+data.json
+*.zip
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Environment files (if you ever add them)
+.env
+.env.local
+.env.development.local
+.env.production.local
+
+# Temporary
+tmp/
+temp/
