@@ -1,29 +1,39 @@
-# Node
+# ========================================
+# Obsidian Calendar Events Plugin
+# ========================================
+
+# Node.js dependencies
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Build and distribution output
 dist/
 build/
-npm-debug.log
-.DS_Store
-
-# Obsidian plugin build artifacts
+*.zip
 main.js
 main.js.map
-data.json
-*.zip
-
-# VS Code
-.vscode/
-*.code-workspace
 
 # TypeScript cache
 *.tsbuildinfo
 
-# Environment files (if you ever add them)
+# Logs and temp files
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# Environment / secrets
 .env
 .env.local
-.env.development.local
-.env.production.local
 
-# Temporary
-tmp/
-temp/
+# OS-specific files
+.idea/
+.vscode/
+*.swp
+
+# Obsidian Vault local data (just in case)
+.obsidian/workspace.json
+.obsidian/plugins/*/data.json

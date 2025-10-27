@@ -1,6 +1,6 @@
 {
   "name": "obsidian-calendar-events",
-  "version": "1.0.0",
+  "version": "0.5.0",
   "description": "Display and mange iCal (.ics) calendar events directly inside Obsidian.",
   "main": "main.js",
   "scripts": {
