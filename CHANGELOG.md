@@ -4,6 +4,21 @@ All notable changes to the **Obsidian Calendar Events** plugin will be documente
 
 ---
 
+## **v0.6.0** — UI Improvements  
+**Release Date:** 2025-10-28  
+
+### New Features
+- Added **“No events”** message for days without any calendar entries.
+- Improved **calendar header** to use a theme-aware background with transparency and `backdrop-filter` blur.
+- Enhanced UI consistency with Obsidian’s built-in and community themes.
+
+### Improvements
+- Reordered vendor-prefixed CSS properties for linter compliance.
+- Prevented event cards from scrolling underneath the sticky header.
+- Updated version numbers in `manifest.json`, `package.json`, and `versions.json`.
+
+---
+
 ## **v0.5.1** — Add to Daily Note Feature  
 **Release Date:** 2025-10-28  
 

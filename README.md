@@ -32,7 +32,9 @@ Designed for seamless integration with external calendar feeds such as Outlook, 
 ## ✨ Features
 
 - 📅 View upcoming events from any iCal (.ics) feed inside Obsidian  
-- 🗓️ Events automatically grouped and sorted by day  
+- 🗓️ Events automatically grouped and sorted by day
+- 🗓️ Pin today's events to the top of the event list
+- 🗓️ Click on event to add it to daily note  
 - ⏱️ Configurable date range to control how far ahead events are displayed  
 - ⚙️ Simple settings panel for configuration  
 - 💡 Works entirely offline once data is fetched — no external dependencies beyond the Obsidian API
@@ -41,7 +43,8 @@ Designed for seamless integration with external calendar feeds such as Outlook, 
 
 ## 🧩 How It Works
 
-This plugin reads events from a provided iCal (ICS) URL and displays them in a dedicated Obsidian view.  
+This plugin reads events from a provided iCal (ICS) URL and displays them in a dedicated Obsidian view. 
+
 Events are parsed, grouped by date, and presented in a clean, readable layout inside the app.
 
 ---
