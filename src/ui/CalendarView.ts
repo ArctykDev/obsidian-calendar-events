@@ -1,5 +1,10 @@
-import { ItemView, WorkspaceLeaf, Notice, setIcon } from "obsidian";
+import { ItemView, WorkspaceLeaf, Notice, TFile, setIcon } from "obsidian";
 import moment from "moment";
+import {
+  getAllDailyNotes,
+  getDailyNote,
+  createDailyNote,
+} from "obsidian-daily-notes-interface";
 import type ObsidianCalendarPlugin from "../main";
 import type { CalendarEvent } from "../types";
 
@@ -43,7 +48,7 @@ export class CalendarView extends ItemView {
 
     // Left: title + sort toggle
     const leftSection = header.createDiv({ cls: "spcalendar-header-left" });
-    leftSection.createSpan({ text: "Obsidian Calendar Events" });
+    leftSection.createSpan({ text: "Calendar Events" });
 
     const sortIndicator = leftSection.createSpan({
       cls: "spcalendar-sort-indicator",
@@ -143,8 +148,7 @@ export class CalendarView extends ItemView {
       grouped[day].push(ev);
     }
 
-    const sortOrder =
-      this.plugin.settings.sortOrder === "asc" ? 1 : -1;
+    const sortOrder = this.plugin.settings.sortOrder === "asc" ? 1 : -1;
     const todayKey = moment().format("YYYY-MM-DD");
 
     // Sort days
@@ -154,7 +158,6 @@ export class CalendarView extends ItemView {
 
     // Pin today's events
     if (this.plugin.settings.pinToday) {
-      // Ensure todayKey exists even if empty
       if (!grouped[todayKey]) grouped[todayKey] = [];
       const idx = sortedDays.indexOf(todayKey);
       if (idx > -1) sortedDays.splice(idx, 1);
@@ -181,7 +184,7 @@ export class CalendarView extends ItemView {
       });
 
       const headerText = isToday
-        ? `📌 Today — ${moment(day).format("dddd, MMMM Do YYYY")}`
+        ? `Today — ${moment(day).format("dddd, MMMM Do YYYY")}`
         : moment(day).format("dddd, MMMM Do YYYY");
 
       headerRow.createEl("h3", { text: headerText });
@@ -201,7 +204,7 @@ export class CalendarView extends ItemView {
           "h:mm A"
         )}`;
         card.createEl("div", {
-          text: `⏰ ${when}`,
+          text: `Time: ${when}`,
           cls: "spcalendar-time",
         });
 
@@ -211,6 +214,11 @@ export class CalendarView extends ItemView {
             cls: "spcalendar-location",
           });
         }
+
+        // Add click handler to insert event as a checklist in daily note
+        card.addEventListener("click", async () => {
+          await this.addEventToDailyNote(e);
+        });
       }
     }
 
@@ -219,6 +227,73 @@ export class CalendarView extends ItemView {
       setTimeout(() => {
         todayElement.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 250);
+    }
+  }
+
+  // Add event to daily note as a Markdown task
+  private async addEventToDailyNote(event: CalendarEvent) {
+    const app = this.plugin.app;
+    const date = moment(event.start).startOf("day");
+
+    try {
+      let dailyNote = getDailyNote(date, getAllDailyNotes());
+      if (!dailyNote) {
+        dailyNote = await createDailyNote(date);
+      }
+
+      if (!dailyNote) {
+        new Notice("Unable to locate or create the daily note.");
+        return;
+      }
+
+      const content = await app.vault.read(dailyNote);
+      const newTask = `- [ ] ${event.subject} (${moment(event.start).format(
+        "h:mm A"
+      )} - ${moment(event.end).format("h:mm A")})${
+        event.location ? ` - ${event.location}` : ""
+      }`;
+
+      let updatedContent = content;
+
+      if (this.plugin.settings.addUnderHeading) {
+        const heading = `## ${this.plugin.settings.headingName}`;
+        const headingRegex = new RegExp(
+          `^#{1,6}\\s+${this.plugin.settings.headingName}\\s*$`,
+          "m"
+        );
+      
+        if (headingRegex.test(content)) {
+          // Find the heading position and insert task right after existing section
+          const lines = content.split("\n");
+          const index = lines.findIndex((line) =>
+            headingRegex.test(line)
+          );
+      
+          if (index !== -1) {
+            // Ensure exactly one blank line after heading
+            if (lines[index + 1]?.trim() !== "") {
+              lines.splice(index + 1, 0, "");
+            }
+            lines.splice(index + 2, 0, newTask);
+            updatedContent = lines.join("\n");
+          } else {
+            // Fallback — append heading and task
+            updatedContent = `${content.trim()}\n\n${heading}\n\n${newTask}`;
+          }
+        } else {
+          // Create new heading with one blank line below it
+          updatedContent = `${content.trim()}\n\n${heading}\n\n${newTask}`;
+        }
+      } else {
+        updatedContent = `${content.trim()}\n${newTask}`;
+      }
+      
+
+      await app.vault.modify(dailyNote, updatedContent);
+      new Notice(`Added to ${dailyNote.basename} as a task.`);
+    } catch (err) {
+      console.error("Failed to add event to daily note:", err);
+      new Notice("Error adding event to daily note.");
     }
   }
 }

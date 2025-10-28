@@ -30,6 +30,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "moment": "^2.29.4"
+    "moment": "^2.29.4",
+    "obsidian-daily-notes-interface": "0.9.4"
   }
 }

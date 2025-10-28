@@ -17,6 +17,8 @@ A lightweight Obsidian plugin that displays events from an **iCal (ICS)** feed d
 
 Designed for seamless integration with external calendar feeds such as Outlook, Google Calendar, or SharePoint calendar ICS links.
 
+![alt text](assets/image.png)
+
 ---
 
 ## ✨ Features
