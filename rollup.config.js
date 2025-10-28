@@ -4,14 +4,14 @@ import resolve from "@rollup/plugin-node-resolve";
 import copy from "rollup-plugin-copy";
 
 export default {
-  input: "src/main.ts", // Entry point for your plugin
+  input: "src/main.ts", // Entry point
   output: {
-    dir: ".", // Output to the plugin root so Obsidian can load it directly
+    dir: ".", // Output directly to plugin root
     sourcemap: true,
-    format: "cjs", // Obsidian requires CommonJS output
+    format: "cjs",
     exports: "default",
   },
-  external: ["obsidian"], // Obsidian API is provided by the app itself
+  external: ["obsidian"],
   plugins: [
     resolve({
       browser: true,
@@ -23,7 +23,7 @@ export default {
     }),
     copy({
       targets: [
-        // Copy the stylesheet to the same folder as main.js
+        //Copy required static files to plugin root
         { src: "src/styles.css", dest: "." },
       ],
     }),
