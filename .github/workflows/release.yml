@@ -4,38 +4,68 @@ on:
   push:
     tags:
       - "v*.*.*"
+  workflow_dispatch:
 
 jobs:
   build:
+    name: Build and Release Obsidian Plugin
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: 🧩 Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: 🧰 Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "npm"
+          cache: npm
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: npm ci
 
-      - name: Build plugin
+      - name: 🏷️ Extract version from tag
+        id: get_version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: 🧮 Update manifest.json and versions.json
+        run: |
+          VERSION=${{ steps.get_version.outputs.version }}
+          echo "Updating manifest.json and versions.json to version $VERSION"
+
+          # Update manifest.json
+          jq --arg v "$VERSION" '.version = $v' manifest.json > manifest.tmp && mv manifest.tmp manifest.json
+
+          # Update versions.json
+          if [ -f versions.json ]; then
+            jq --arg v "$VERSION" '. + {($v): "1.4.0"}' versions.json > versions.tmp && mv versions.tmp versions.json
+          else
+            echo "{ \"$VERSION\": \"1.4.0\" }" > versions.json
+          fi
+
+          cat manifest.json
+          cat versions.json
+
+      - name: 🏗️ Build plugin
         run: npm run build
 
-      - name: Package plugin
+      - name: 📦 Package plugin
         run: |
-          mkdir release
-          cp manifest.json main.js versions.json release/
+          mkdir -p release
+          cp manifest.json main.js main.js.map versions.json release/
+          cd release
+          zip -r obsidian-calendar-events.zip ./*
+          cd ..
 
-      - name: Upload release assets
-        uses: softprops/action-gh-release@v1
+      - name: 🚀 Publish GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             release/manifest.json
             release/main.js
+            release/main.js.map
             release/versions.json
+            release/obsidian-calendar-events.zip
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
