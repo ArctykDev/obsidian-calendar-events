@@ -6,6 +6,10 @@ on:
       - "v*.*.*"
   workflow_dispatch:
 
+# ✅ REQUIRED: give Actions permission to publish releases
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build and Release Obsidian Plugin
@@ -33,18 +37,12 @@ jobs:
           VERSION=${{ steps.get_version.outputs.version }}
           echo "Updating manifest.json and versions.json to version $VERSION"
 
-          # Update manifest.json
           jq --arg v "$VERSION" '.version = $v' manifest.json > manifest.tmp && mv manifest.tmp manifest.json
-
-          # Update versions.json
           if [ -f versions.json ]; then
             jq --arg v "$VERSION" '. + {($v): "1.4.0"}' versions.json > versions.tmp && mv versions.tmp versions.json
           else
             echo "{ \"$VERSION\": \"1.4.0\" }" > versions.json
           fi
-
-          cat manifest.json
-          cat versions.json
 
       - name: 🏗️ Build plugin
         run: npm run build
