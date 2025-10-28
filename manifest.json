@@ -6,15 +6,6 @@
     "description": "Display and manage iCal (.ics) calendar events directly inside Obsidian. Supports any public ICS feed (Google, Outlook, Apple, etc.).",
     "author": "James Hawkins",
     "authorUrl": "https://arctyk.dev",
-    "isDesktopOnly": false,
-    "main": "main.js",
-    "css": "styles.css",
-    "commands": [
-      {
-        "id": "spc-scroll-to-today",
-        "name": "Scroll to Today",
-        "hotkeys": [{ "modifiers": ["Mod"], "key": "t" }]
-      }
-    ]    
+    "isDesktopOnly": false  
   }
   

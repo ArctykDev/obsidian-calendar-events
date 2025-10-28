@@ -24,9 +24,7 @@ export default {
     copy({
       targets: [
         //Copy required static files to plugin root
-        { src: "src/styles.css", dest: "build" },
-        { src: "manifest.json", dest: "build" },
-        { src: "versions.json", dest: "build" },
+        { src: "src/styles.css", dest: "." },
       ],
     }),
   ],
