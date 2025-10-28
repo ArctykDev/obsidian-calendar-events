@@ -8,7 +8,7 @@
     "authorUrl": "https://arctyk.dev",
     "isDesktopOnly": false,
     "main": "main.js",
-    "css": ["styles.css"],
+    "css": "styles.css",
     "commands": [
       {
         "id": "spc-scroll-to-today",
