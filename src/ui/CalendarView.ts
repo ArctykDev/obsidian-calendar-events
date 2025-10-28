@@ -193,6 +193,14 @@ export class CalendarView extends ItemView {
         cls: "spcalendar-badge",
       });
 
+      if (eventsForDay.length === 0) {
+        dayContainer.createEl("p", {
+          text: "No events",
+          cls: "spcalendar-empty-day",
+        });
+        continue; // Skip to the next day
+      }
+
       for (const e of eventsForDay) {
         const card = dayContainer.createDiv({ cls: "spcalendar-event" });
         card.createEl("div", {
@@ -203,21 +211,38 @@ export class CalendarView extends ItemView {
         const when = `${moment(e.start).format("h:mm A")} → ${moment(e.end).format(
           "h:mm A"
         )}`;
-        card.createEl("div", {
-          text: `Time: ${when}`,
-          cls: "spcalendar-time",
-        });
+        const timeRow = card.createDiv({ cls: "spcalendar-row" });
+        const timeIcon = timeRow.createSpan({ cls: "spcalendar-icon" });
+        setIcon(timeIcon, "clock");
+        timeRow.createSpan({ text: `${moment(e.start).format("h:mm A")} → ${moment(e.end).format("h:mm A")}`, cls: "spcalendar-time-text" });
 
         if (e.location) {
-          card.createEl("div", {
-            text: e.location,
-            cls: "spcalendar-location",
-          });
+          const locRow = card.createDiv({ cls: "spcalendar-row" });
+          const locIcon = locRow.createSpan({ cls: "spcalendar-icon" });
+          setIcon(locIcon, "map-pin");
+          locRow.createSpan({ text: e.location, cls: "spcalendar-location-text" });
         }
 
-        // Add click handler to insert event as a checklist in daily note
-        card.addEventListener("click", async () => {
+        // Add "Add to Daily Note" icon button
+        const addBtn = card.createEl("button", {
+          cls: "spcalendar-add-btn hidden",
+          attr: { "aria-label": "Add to Daily Note" },
+        });
+        setIcon(addBtn, "file-plus");
+        addBtn.setAttr("title", "Add to Daily Note");
+
+        // Button click handler (stop propagation so it doesn’t trigger card clicks)
+        addBtn.addEventListener("click", async (ev) => {
+          ev.stopPropagation();
           await this.addEventToDailyNote(e);
+        });
+
+        // Show/hide the button on hover
+        card.addEventListener("mouseenter", () => {
+          addBtn.classList.remove("hidden");
+        });
+        card.addEventListener("mouseleave", () => {
+          addBtn.classList.add("hidden");
         });
       }
     }
@@ -261,33 +286,26 @@ export class CalendarView extends ItemView {
           `^#{1,6}\\s+${this.plugin.settings.headingName}\\s*$`,
           "m"
         );
-      
+
         if (headingRegex.test(content)) {
-          // Find the heading position and insert task right after existing section
           const lines = content.split("\n");
-          const index = lines.findIndex((line) =>
-            headingRegex.test(line)
-          );
-      
+          const index = lines.findIndex((line) => headingRegex.test(line));
+
           if (index !== -1) {
-            // Ensure exactly one blank line after heading
             if (lines[index + 1]?.trim() !== "") {
               lines.splice(index + 1, 0, "");
             }
             lines.splice(index + 2, 0, newTask);
             updatedContent = lines.join("\n");
           } else {
-            // Fallback — append heading and task
             updatedContent = `${content.trim()}\n\n${heading}\n\n${newTask}`;
           }
         } else {
-          // Create new heading with one blank line below it
           updatedContent = `${content.trim()}\n\n${heading}\n\n${newTask}`;
         }
       } else {
         updatedContent = `${content.trim()}\n${newTask}`;
       }
-      
 
       await app.vault.modify(dailyNote, updatedContent);
       new Notice(`Added to ${dailyNote.basename} as a task.`);
