@@ -15,6 +15,12 @@ export interface ObsidianCalendarSettings {
 
   // Always show today's events at the top
   pinToday: boolean;
+
+  // Add events under a specific heading in the daily note
+  addUnderHeading: boolean;
+
+  // The heading name under which events are added
+  headingName: string;
 }
 
 /**
@@ -26,5 +32,5 @@ export interface CalendarEvent {
   start: string;
   end: string;
   location?: string;
-  raw?: any; // The raw VEVENT block for debugging
+  raw?: any;
 }

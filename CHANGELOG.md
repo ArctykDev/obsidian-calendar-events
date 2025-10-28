@@ -1,91 +1,57 @@
-# 📜 Changelog
+# Changelog
 
-All notable changes to **Obsidian Calendar Events** will be documented in this file.  
-This project follows [Semantic Versioning](https://semver.org/) and the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) standard.
-
----
-
-![Version](https://img.shields.io/github/v/release/ArctykDev/obsidian-calendar-events?label=Latest%20Version&style=for-the-badge)
-![Build](https://img.shields.io/github/actions/workflow/status/ArctykDev/obsidian-calendar-events/build.yml?style=for-the-badge)
-![License](https://img.shields.io/github/license/ArctykDev/obsidian-calendar-events?style=for-the-badge)
+All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
 ---
 
-## [Unreleased]
-### 🚧 Planned Features
-- Support for **Outlook** and **Microsoft 365 Group** calendars via Microsoft Graph
-- Integration with **SharePoint List** calendars
-- **Device Code Authentication** for Microsoft accounts
-- Event color-coding by calendar source
-- Inline event **insertion into Obsidian notes**
-- **Search and filtering** of events
-- **Month/Week calendar view** mode
-- Customizable event display themes and layout improvements
+## **v0.6.0** — UI Improvements  
+**Release Date:** 2025-10-28  
+
+### New Features
+- Added **“No events”** message for days without any calendar entries.
+- Improved **calendar header** to use a theme-aware background with transparency and `backdrop-filter` blur.
+- Enhanced UI consistency with Obsidian’s built-in and community themes.
+
+### Improvements
+- Reordered vendor-prefixed CSS properties for linter compliance.
+- Prevented event cards from scrolling underneath the sticky header.
+- Updated version numbers in `manifest.json`, `package.json`, and `versions.json`.
 
 ---
 
-## [0.5.0] - 2025-10-27  
-**Milestone:** *First functional ICS-only release*
+## **v0.5.1** — Add to Daily Note Feature  
+**Release Date:** 2025-10-28  
 
-### ✨ Added
-- Initial release of **Obsidian Calendar Events**  
-- Fetches and displays events from **iCal (.ics)** feeds
-- Groups and sorts events by day using `moment.js`
-- Introduces plugin settings for:
-  - iCal URL input  
-  - Configurable date range (in days)
-- Adds command palette entry: **“Refresh Calendar Events”**
-- Displays events in a clean, date-grouped format inside Obsidian
-- Includes fallback message when no events are available
+### New Features
+- Added the ability to insert calendar events directly into your Daily Note.
+- Events are now added as Markdown checklist items (`- [ ] ...`).
+- Introduced new settings:
+  - **Add Events Under Heading** — toggle whether to insert events under a specific heading.
+  - **Heading Name** — specify the heading under which events are added.
+- Automatically creates the heading if it does not exist.
+- Prevents duplicate blank lines between heading and newly inserted tasks.
 
-### ⚙️ Technical
-- Written entirely in **TypeScript**
-- Bundled using **Rollup**
-- Built against the **Obsidian API v1.4.0+**
-- Lightweight and dependency-minimal implementation
-- Compatible with desktop and mobile Obsidian builds
+### Improvements
+- Improved note formatting consistency when adding multiple events.
+- Maintains all existing calendar features (sorting, pinned today, refresh button, and iCal support).
 
 ---
 
-## [0.1.0] - 2025-10-20  
-**Milestone:** *Prototype and structural groundwork*
+## **v0.5.0** — Stable Release  
+**Release Date:** 2025-10-25  
 
-### 🧩 Added
-- Basic Obsidian panel integration for displaying placeholder events  
-- Created settings tab and configuration storage
-- Established project architecture and Rollup build process  
-- Plugin renamed from **SharePoint Calendar Events** → **Obsidian Calendar Events**
-
----
-
-## 🔖 Versioning
-
-This project uses **semantic versioning** (`MAJOR.MINOR.PATCH`):
-
-| Increment | When to Use |
-|------------|-------------|
-| **MAJOR** | Breaking API or settings changes |
-| **MINOR** | New features added (non-breaking) |
-| **PATCH** | Bug fixes, optimizations, or small tweaks |
-
-Example:
-
-```bash
-0.5.0 → 0.6.0 = New feature (non-breaking)
-0.6.0 → 1.0.0 = First stable public release
-```
+### Highlights
+- Initial public release of **Obsidian Calendar Events**.
+- Added iCal event fetching and grouping by day.
+- Added sorting options (ascending/descending).
+- Added “Pin Today” feature to always keep the current day’s events visible.
+- Added Refresh and Settings controls within the calendar view.
+- Display range configuration (days before and after today).
 
 ---
 
-## 🧩 Links
-
-- 🏷️ [Latest Release](https://github.com/ArctykDev/obsidian-calendar-events/releases/latest)  
-- 🧠 [Open Issues](https://github.com/ArctykDev/obsidian-calendar-events/issues)  
-- ⚙️ [Pull Requests](https://github.com/ArctykDev/obsidian-calendar-events/pulls)  
-
----
-
-## 🪪 License
-
-Licensed under the [MIT License](LICENSE).  
-Copyright © 2025 **Arctyk**
+### Versioning
+This plugin follows [Semantic Versioning](https://semver.org/):
+- **MAJOR** — Breaking changes  
+- **MINOR** — New features, backward-compatible  
+- **PATCH** — Fixes or small improvements

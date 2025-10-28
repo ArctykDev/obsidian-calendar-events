@@ -4,6 +4,8 @@
   "daysAhead": 14,
   "sortOrder": "desc",
   "pinToday": true,
+  "addUnderHeading": true,
+  "headingName": "Calendar Events",
   "clientId": "4e09924c-35e9-46c3-adc4-67ff25b2f0ff",
   "tenantId": "5e73a657-e250-4c32-8632-2c101a949a19",
   "graphScope": "offline_access Calendars.Read",

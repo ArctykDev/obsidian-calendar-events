@@ -8,6 +8,8 @@ export const DEFAULT_SETTINGS: ObsidianCalendarSettings = {
   daysAhead: 7,
   sortOrder: "asc",
   pinToday: true,
+  addUnderHeading: false,
+  headingName: "Calendar Events",
 };
 
 export class ObsidianCalendarSettingTab extends PluginSettingTab {
@@ -104,5 +106,37 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
             await this.save();
           })
       );
+
+    // Add events under heading
+    new Setting(containerEl)
+      .setName("Add Events Under Heading")
+      .setDesc(
+        "If enabled, events will be added under a specific heading in the daily note."
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.settings.addUnderHeading)
+          .onChange(async (value) => {
+            this.settings.addUnderHeading = value;
+            await this.save();
+            this.display(); // re-render to show or hide heading name field
+          })
+      );
+
+    // Heading name (only visible if toggle is enabled)
+    if (this.settings.addUnderHeading) {
+      new Setting(containerEl)
+        .setName("Heading Name")
+        .setDesc("The heading under which events will be added in the daily note.")
+        .addText((text) =>
+          text
+            .setPlaceholder("Calendar Events")
+            .setValue(this.settings.headingName)
+            .onChange(async (value) => {
+              this.settings.headingName = value.trim() || "Calendar Events";
+              await this.save();
+            })
+        );
+    }
   }
 }

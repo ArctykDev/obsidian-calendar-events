@@ -5,7 +5,7 @@
     <img src="https://img.shields.io/github/v/release/ArctykDev/obsidian-calendar-events?color=4caf50&style=for-the-badge" alt="Version">
   </a>
   <a href="https://github.com/ArctykDev/obsidian-calendar-events/actions/workflows/build.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/ArctykDev/obsidian-calendar-events/build.yml?label=Build&style=for-the-badge">
+    <img src="https://img.shields.io/github/actions/workflow/status/ArctykDev/obsidian-calendar-events/release.yml?label=Build&style=for-the-badge">
   </a>
   <a href="https://github.com/ArctykDev/obsidian-calendar-events/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/ArctykDev/obsidian-calendar-events?style=for-the-badge" alt="License: MIT">
@@ -17,12 +17,24 @@ A lightweight Obsidian plugin that displays events from an **iCal (ICS)** feed d
 
 Designed for seamless integration with external calendar feeds such as Outlook, Google Calendar, or SharePoint calendar ICS links.
 
+### Calendar View
+
+![Calendar View Example](src/assets/obsidian-calendar-events.png)
+
+### Settings View
+
+![Calendar View Example](src/assets/obsidian-calendar-events-settings.png)
+
+
+
 ---
 
 ## ✨ Features
 
 - 📅 View upcoming events from any iCal (.ics) feed inside Obsidian  
-- 🗓️ Events automatically grouped and sorted by day  
+- 🗓️ Events automatically grouped and sorted by day
+- 🗓️ Pin today's events to the top of the event list
+- 🗓️ Click on event to add it to daily note  
 - ⏱️ Configurable date range to control how far ahead events are displayed  
 - ⚙️ Simple settings panel for configuration  
 - 💡 Works entirely offline once data is fetched — no external dependencies beyond the Obsidian API
@@ -31,7 +43,8 @@ Designed for seamless integration with external calendar feeds such as Outlook, 
 
 ## 🧩 How It Works
 
-This plugin reads events from a provided iCal (ICS) URL and displays them in a dedicated Obsidian view.  
+This plugin reads events from a provided iCal (ICS) URL and displays them in a dedicated Obsidian view. 
+
 Events are parsed, grouped by date, and presented in a clean, readable layout inside the app.
 
 ---
