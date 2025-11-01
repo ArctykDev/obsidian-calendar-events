@@ -2,9 +2,49 @@
 
 All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
+
+
+## [0.6.3] - 2025-11-01
+### Full Outlook Compatibility and iCal Improvements
+
+This release delivers a major enhancement to iCal (ICS) event handling — bringing full compatibility with Outlook and Microsoft 365 calendar feeds.  
+It resolves previous issues where some events appeared late, all-day events were missing, or recurring meetings failed to display.
+
+#### ICS Parsing
+- Rebuilt the `parseICS()` function for full **Outlook/Exchange compatibility**.  
+- Added support for:
+  - **Folded multi-line fields** (RFC 5545 compliant).  
+  - **Escaped text** (commas, semicolons, and backslashes).  
+  - **All-day events** using `VALUE=DATE`.  
+  - **Local time zone handling (`TZID=…`)** with correct UTC conversion.  
+  - **Canceled or modified events** (`STATUS:CANCELLED`, `RECURRENCE-ID`).  
+- Normalized all timestamps to UTC for consistent rendering in Obsidian.
+
+#### Recurrence (RRULE) Expansion
+- Integrated the **`rrule`** library to expand recurring events exactly as Outlook does.  
+- Handles:
+  - Daily, weekly, monthly, and custom recurrence patterns.  
+  - Exclusions and cancellations within a recurring series.  
+- Prevents duplicate or missing recurring instances.
+
+#### Event Filtering and Date Range
+- Adjusted `fetchEvents()` to calculate ranges using **local midnight boundaries**, ensuring complete coverage of each day.  
+- Added a 12-hour buffer on both sides of the date window to capture early-morning and late-night events.  
+- Improved overlap logic so events spanning multiple days or starting before/ending after the range are always included.
+
+#### Diagnostics and Stability
+- Added detailed console diagnostics for troubleshooting event visibility and time-zone alignment.  
+- Improved error handling for malformed ICS data.  
+- Enhanced performance and parsing stability.
+
 ---
 
-## **v0.6.0** — UI Improvements  
+### Result
+The plugin now matches Outlook’s calendar view exactly — including recurring meetings, all-day events, cancellations, and localized start/end times — while maintaining smooth performance and reliability inside Obsidian.
+
+---
+
+## [v0.6.0] — UI Improvements  
 **Release Date:** 2025-10-28  
 
 ### New Features
@@ -19,7 +59,7 @@ All notable changes to the **Obsidian Calendar Events** plugin will be documente
 
 ---
 
-## **v0.5.1** — Add to Daily Note Feature  
+## [v0.5.1] — Add to Daily Note Feature  
 **Release Date:** 2025-10-28  
 
 ### New Features
@@ -37,7 +77,7 @@ All notable changes to the **Obsidian Calendar Events** plugin will be documente
 
 ---
 
-## **v0.5.0** — Stable Release  
+## [0.5.0] — Stable Release  
 **Release Date:** 2025-10-25  
 
 ### Highlights
