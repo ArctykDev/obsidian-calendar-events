@@ -1,6 +1,6 @@
 {
   "name": "obsidian-calendar-events",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "type": "module",
   "description": "Display and mange iCal (.ics) calendar events directly inside Obsidian.",
   "main": "main.js",
@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "moment": "^2.29.4",
-    "obsidian-daily-notes-interface": "0.9.4"
+    "obsidian-daily-notes-interface": "0.9.4",
+    "rrule": "2.8.1"
   }
 }
