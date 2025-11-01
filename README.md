@@ -17,6 +17,8 @@ A lightweight Obsidian plugin that displays events from an **iCal (ICS)** feed d
 
 Designed for seamless integration with external calendar feeds such as Outlook, Google Calendar, or SharePoint calendar ICS links.
 
+View previous versions and full changelog [CHANGELOG.md](CHANGELOG.md).
+
 ### Calendar View
 
 ![Calendar View Example](src/assets/obsidian-calendar-events.png)
@@ -49,9 +51,41 @@ Events are parsed, grouped by date, and presented in a clean, readable layout in
 
 ---
 
+
 ## 🛠 Installation
 
-### Option 1 — Manual (Developer)
+### Option 1: Install via BRAT (Recommended for testing)
+
+You can easily install this plugin using the BRAT (Beta Reviewers Auto-update Tester)
+ plugin:
+
+1. Install and enable BRAT in Obsidian.
+2. Open the BRAT settings panel.
+3. Add this repository using the GitHub URL:
+
+   ```bash
+   ArctykDev/obsidian-calendar-events
+   ```
+4. BRAT will automatically download and update the plugin whenever new versions are released.
+
+### Option 2: Manual installation
+
+1. Download the latest release from the Releases page.
+2. Extract the archive into your vault’s plugin folder:
+
+   ```bash
+   .obsidian/plugins/obsidian-calendar-events/
+   ```
+3. Ensure the folder contains the following files:
+
+   ```bash
+   main.js
+   manifest.json
+   styles.css (if applicable)
+   ```
+4. Reload Obsidian and enable SharePoint Calendar Events from the community plugins list.
+
+### Option 3 — Manual (Developer)
 
 1. Clone or download this repository:
    ```bash
