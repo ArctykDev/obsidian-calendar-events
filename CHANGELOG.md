@@ -2,7 +2,51 @@
 
 All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
+## [0.6.4] - 2025-11-03
 
+### New Features
+
+- **Dynamic “Last Updated” label**  
+    Displays when calendar data was last fetched. Updates automatically every minute (for example, “Updated 5 minutes ago”) and hides automatically after 24 hours of inactivity.    
+- **Loading indicator**  
+    Added a lightweight “Loading events…” message with a subtle spinner when the plugin first loads or when the user clicks Refresh.    
+- **Welcome and setup screen**  
+    When no calendar is configured, the plugin now shows a friendly welcome message with an **Open Settings** button.  The header and toolbar remain visible for a consistent interface.    
+- **Auto-loading on startup**  
+    The calendar automatically fetches events on startup if an iCal URL is configured, removing the need for manual refresh.    
+- **Smarter refresh logic**  
+    The Refresh button now handles first-run conditions correctly. If no calendar is configured, it shows the setup screen instead of an endless spinner.    
+
+### UI Improvements
+
+- **Cleaner layout**  
+    The “Showing events…” and “Last updated…” lines are hidden when no calendar is configured (first-run or setup state).    
+- **Consistent styling**  
+    Improved text alignment and spacing across all header, loading, and empty states.    
+- **Optional fade transition**  
+    Added an optional opacity transition when switching from the loading spinner to the event view (enabled through CSS).   
+
+### Technical Enhancements
+
+- Added a `showLoading()` helper to `CalendarView` for unified loading behavior during startup and refresh operations.    
+- Introduced `lastUpdated` and `updateTimer` class fields with proper cleanup in `onunload()` to prevent memory leaks.    
+- Updated the `onLayoutReady()` startup logic to show the loading indicator and handle both configured and first-run states cleanly.    
+- Minor CSS refinements for `.spcalendar-loading`, `.spcalendar-empty`, and `.spcalendar-updated` to align with the Obsidian design language.
+    
+
+### Tested Scenarios
+
+- First run with no calendar configured → welcome message with **Open Settings** button    
+- Startup with configured calendar → loading spinner → event list    
+- Manual refresh (configured) → loading spinner → refreshed events    
+- Manual refresh (unconfigured) → setup message (no infinite spinner)    
+- Timestamp automatically hides after 24 hours    
+
+### Summary
+
+This release focuses on refining the user experience, improving the startup flow, and providing clear visual feedback for loading, configuration, and refresh states. It lays the groundwork for more advanced calendar management in future versions.
+
+---
 
 ## [0.6.3] - 2025-11-01
 ### Full Outlook Compatibility and iCal Improvements

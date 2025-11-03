@@ -21,6 +21,8 @@ export interface ObsidianCalendarSettings {
 
   // The heading name under which events are added
   headingName: string;
+
+  firstRun?: boolean;
 }
 
 /**

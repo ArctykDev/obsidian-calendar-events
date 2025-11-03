@@ -10,6 +10,7 @@ export const DEFAULT_SETTINGS: ObsidianCalendarSettings = {
   pinToday: true,
   addUnderHeading: false,
   headingName: "Calendar Events",
+  firstRun: true,
 };
 
 export class ObsidianCalendarSettingTab extends PluginSettingTab {
