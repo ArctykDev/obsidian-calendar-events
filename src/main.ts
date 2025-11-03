@@ -107,19 +107,30 @@ export default class ObsidianCalendarPlugin extends Plugin {
       )
     );
 
-    // Inject a demo event to confirm layout
+    // On first load, show setup instructions if no calendar is configured
     this.app.workspace.onLayoutReady(async () => {
-      const testEvent: CalendarEvent = {
-        id: "demo1",
-        subject: "Test Event",
-        start: new Date().toISOString(),
-        end: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-        location: "Obsidian Test",
-        raw: {},
-      };
-      await this.pushToView([testEvent]);
-      new Notice("Demo event added to calendar view.");
-    });
+      const leaf = await this.activateView();
+      const view = leaf.view as CalendarView;
+
+      view.showLoading();
+    
+      if (!this.settings.icalUrl || this.settings.icalUrl.trim() === "") {
+        console.log("[Obsidian Calendar Events] No calendar configured — showing setup message.");
+        view.setEvents([]); // will trigger your CalendarView empty state
+        new Notice("No calendar configured. Open plugin settings to add your iCal or Outlook calendar.");
+        return;
+      }
+    
+      try {
+        const events = await this.calendar.fetchEvents();
+        view.setEvents(events);
+      } catch (err) {
+        console.warn("[OCE] Startup fetch failed:", err);
+        // Keep the header visible and show a non-blocking empty state
+        view.setEvents([]);
+        new Notice("Unable to load calendar events. Check your iCal URL or network.");
+      }
+    });    
   }
 
   onunload() {

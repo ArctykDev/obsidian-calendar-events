@@ -13,6 +13,12 @@
   background: var(--background-primary);
   border-radius: 6px;
   box-sizing: border-box;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+}
+
+.spcalendar-wrapper.fade-out {
+  opacity: 0;
 }
 
 /* Scrollbar styling (cross-browser) */
@@ -95,6 +101,30 @@
   transform: scale(1.1);
 }
 
+.spcalendar-loading p {
+  font-size: 1.1em;
+  color: var(--text-muted);
+}
+
+.spcalendar-loading::after {
+  content: "";
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin: 12px auto 0 auto;
+  border: 2px solid var(--text-muted);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
 /* Sort indicator */
 .spcalendar-sort-indicator {
   cursor: pointer;
@@ -116,6 +146,13 @@
   font-size: 0.85em;
   color: var(--text-muted);
   margin-bottom: 1.2em;
+}
+
+.spcalendar-updated {
+  text-align: center;
+  font-size: 0.85em;
+  color: var(--text-muted);
+  margin-top: 4px;
 }
 
 /* Day grouping */

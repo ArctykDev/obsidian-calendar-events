@@ -1,11 +1,12 @@
 {
-  "icalUrl": "https://outlook.office365.com/owa/calendar/d7ed2a4a28934e299c22e87ca1ba511e@snolab.ca/aafffd81dea2494897ac948364a95b3217632213243839133226/calendar.ics",
+  "icalUrl": "",
   "daysBefore": 0,
   "daysAhead": 14,
   "sortOrder": "asc",
   "pinToday": true,
   "addUnderHeading": true,
   "headingName": "Calendar Events",
+  "firstRun": false,
   "clientId": "4e09924c-35e9-46c3-adc4-67ff25b2f0ff",
   "tenantId": "5e73a657-e250-4c32-8632-2c101a949a19",
   "graphScope": "offline_access Calendars.Read",

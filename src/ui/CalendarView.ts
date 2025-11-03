@@ -13,6 +13,8 @@ export const VIEW_TYPE_SPCALENDAR = "spcalendar-view";
 export class CalendarView extends ItemView {
   private events: CalendarEvent[] = [];
   private plugin: ObsidianCalendarPlugin;
+  private lastUpdated: Date | null = null;
+  private updateTimer: number | null = null;
 
   constructor(leaf: WorkspaceLeaf, plugin: ObsidianCalendarPlugin) {
     super(leaf);
@@ -27,14 +29,36 @@ export class CalendarView extends ItemView {
     return "Calendar Events";
   }
 
+  getIcon(): string {
+    return "calendar-range";
+  }
+
   setEvents(events: CalendarEvent[] | null | undefined) {
     this.events = Array.isArray(events) ? events : [];
+    this.lastUpdated = new Date();
     this.render();
   }
+
+  showLoading(message = "Loading calendar events...") {
+    const container = this.containerEl;
+    container.empty();
+
+    const wrapper = container.createDiv({ cls: "spcalendar-wrapper" });
+    const loadingDiv = wrapper.createDiv({ cls: "spcalendar-loading" });
+    loadingDiv.style.textAlign = "center";
+    loadingDiv.style.padding = "48px";
+    loadingDiv.createEl("p", { text: message });
+  }
+
 
   private render() {
     const container = this.containerEl;
     container.empty();
+
+    if (!this.plugin?.settings) {
+      this.showLoading("Initializing...");
+      return;
+    }
 
     if (!this.plugin) {
       container.createEl("p", { text: "Plugin context unavailable." });
@@ -88,15 +112,30 @@ export class CalendarView extends ItemView {
     refreshBtn.setAttr("title", "Refresh Calendar Events");
     refreshBtn.addEventListener("click", async () => {
       try {
+        const icalUrl = this.plugin.settings.icalUrl?.trim();
+
+        // If no calendar configured, skip fetch and show setup message
+        if (!icalUrl) {
+          this.setEvents([]); // triggers welcome/setup screen
+          new Notice("No calendar configured. Open settings to add a calendar.");
+          return;
+        }
+
+        // Otherwise, show loading spinner and fetch
+        this.showLoading("Refreshing events...");
         new Notice("Refreshing calendar...");
+
         const events = await this.plugin.calendar.fetchEvents();
         this.setEvents(events);
+
         new Notice("Calendar refreshed.");
       } catch (err) {
         console.error("Error refreshing calendar:", err);
         new Notice("Error refreshing events.");
+        this.setEvents([]); // fallback to reset the view
       }
     });
+
 
     const settingsBtn = rightSection.createEl("button", {
       cls: "spcalendar-settings-btn",
@@ -112,30 +151,100 @@ export class CalendarView extends ItemView {
       }
     });
 
-    // Date Range
-    const rangeContainer = wrapper.createDiv({ cls: "spcalendar-range" });
-    const daysBefore = this.plugin.settings.daysBefore ?? 0;
-    const daysAhead = this.plugin.settings.daysAhead ?? 7;
+    // Date Range & Last Updated
+    const isConfigured =
+      this.plugin.settings.icalUrl && this.plugin.settings.icalUrl.trim() !== "";
 
-    const start = new Date();
-    start.setDate(start.getDate() - daysBefore);
-    const end = new Date();
-    end.setDate(end.getDate() + daysAhead);
+    if (isConfigured) {
+      const rangeContainer = wrapper.createDiv({ cls: "spcalendar-range" });
+      const daysBefore = this.plugin.settings.daysBefore ?? 0;
+      const daysAhead = this.plugin.settings.daysAhead ?? 7;
 
-    const formatter = new Intl.DateTimeFormat(undefined, {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-    rangeContainer.setText(
-      `Showing events from ${formatter.format(start)} → ${formatter.format(end)}`
-    );
+      const start = new Date();
+      start.setDate(start.getDate() - daysBefore);
+      const end = new Date();
+      end.setDate(end.getDate() + daysAhead);
 
-    // === NO EVENTS ===
+      const formatter = new Intl.DateTimeFormat(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+      rangeContainer.setText(
+        `Showing events from ${formatter.format(start)} → ${formatter.format(end)}`
+      );
+
+      // Display dynamic "Last updated" label if available
+      if (this.lastUpdated) {
+        const updatedDiv = wrapper.createDiv({ cls: "spcalendar-updated" });
+
+        const updateLabel = () => {
+          const now = new Date();
+          const diffMs = now.getTime() - this.lastUpdated!.getTime();
+          const diffMinutes = Math.floor(diffMs / 60000);
+
+          let text = "";
+          if (diffMinutes < 1) {
+            text = "Updated just now";
+          } else if (diffMinutes < 60) {
+            text = `Updated ${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
+          } else if (diffMinutes < 1440) {
+            const hours = Math.floor(diffMinutes / 60);
+            text = `Updated ${hours} hour${hours > 1 ? "s" : ""} ago`;
+          } else {
+            // Hide label after 24 hours
+            updatedDiv.empty();
+            if (this.updateTimer) {
+              window.clearInterval(this.updateTimer);
+              this.updateTimer = null;
+            }
+            return;
+          }
+
+          updatedDiv.setText(text);
+        };
+
+        updateLabel();
+
+        // Clear any previous interval before starting a new one
+        if (this.updateTimer) {
+          window.clearInterval(this.updateTimer);
+          this.updateTimer = null;
+        }
+
+        // Update every 60 seconds
+        this.updateTimer = window.setInterval(updateLabel, 60000);
+      }
+    }
+
+    // === NO EVENTS / FIRST RUN ===
     if (!this.events.length) {
-      wrapper.createEl("p", { text: "No upcoming events." });
+      const isConfigured =
+        this.plugin.settings.icalUrl && this.plugin.settings.icalUrl.trim() !== "";
+
+      const emptyState = wrapper.createDiv({ cls: "spcalendar-empty" });
+      emptyState.style.textAlign = "center";
+      emptyState.style.padding = "48px";
+
+      if (!isConfigured) {
+        emptyState.createEl("h3", { text: "Welcome to Obsidian Calendar Events!" });
+        emptyState.createEl("p", {
+          text: "You haven’t added a calendar source yet. Use the settings icon above or click below to connect your iCal or Outlook calendar.",
+        });
+
+        const button = emptyState.createEl("button", { text: "Open Settings" });
+        button.classList.add("mod-cta");
+        button.style.marginTop = "12px";
+        button.onclick = async () => {
+          await this.plugin.openSettingsTab();
+        };
+      } else {
+        emptyState.createEl("p", { text: "No upcoming events." });
+      }
+
       return;
     }
+
 
     // === GROUP BY DAY ===
     const grouped: Record<string, CalendarEvent[]> = {};
@@ -274,9 +383,8 @@ export class CalendarView extends ItemView {
       const content = await app.vault.read(dailyNote);
       const newTask = `- [ ] ${event.subject} (${moment(event.start).format(
         "h:mm A"
-      )} - ${moment(event.end).format("h:mm A")})${
-        event.location ? ` - ${event.location}` : ""
-      }`;
+      )} - ${moment(event.end).format("h:mm A")})${event.location ? ` - ${event.location}` : ""
+        }`;
 
       let updatedContent = content;
 
