@@ -19,6 +19,8 @@ Designed for seamless integration with external calendar feeds such as Outlook, 
 
 View previous versions and full changelog [CHANGELOG.md](CHANGELOG.md).
 
+---
+
 ### Welcome View / First Run
 
 ![Calendar View Example](src/assets/obsidian-calendar-events-welcome-panel.png)

@@ -9,58 +9,81 @@ export default class ObsidianCalendarPlugin extends Plugin {
   calendar!: CalendarClient;
 
   async onload() {
-    console.log("Loading Obsidian Calendar Events plugin");
+    console.log("[Obsidian Calendar Events] Loading plugin...");
 
-    // Load saved settings
+    // Load saved settings (and migrate old single-calendar configs)
     await this.loadSettings();
 
-    // Initialize iCal calendar client
+    // Initialize multi-calendar client
     this.calendar = new CalendarClient(this.settings);
 
-    // Register custom calendar view
+    // Register the custom calendar view
     this.registerView(VIEW_TYPE_SPCALENDAR, (leaf) => new CalendarView(leaf, this));
 
-    // Refresh calendar events
+    // -----------------------------
+    // COMMANDS
+    // -----------------------------
+
+    // Refresh events
     this.addCommand({
       id: "oce-refresh-events",
       name: "Refresh Calendar Events",
       callback: async () => {
         try {
+          const enabled = this.settings.calendars.filter((c) => c.enabled);
+          if (!enabled.length) {
+            new Notice("No enabled calendars configured.");
+            return;
+          }
+
           const events = await this.calendar.fetchEvents();
           await this.pushToView(events);
           new Notice(`Fetched ${events.length} events.`);
         } catch (e: any) {
+          console.error("[OCE] Refresh failed:", e);
           new Notice(`Fetch failed: ${e?.message || e}`);
         }
       },
     });
 
-    // Insert today's events as markdown
+    // Insert today’s events as Markdown
     this.addCommand({
       id: "oce-insert-todays-events",
       name: "Insert Today's Events (Markdown)",
       editorCallback: async (editor) => {
         try {
+          const enabled = this.settings.calendars.filter((c) => c.enabled);
+          if (!enabled.length) {
+            new Notice("No enabled calendars configured.");
+            return;
+          }
+
           const events = await this.calendar.fetchEvents();
           const today = new Date().toISOString().slice(0, 10);
+          const todaysEvents = events.filter((e) =>
+            e.start.startsWith(today)
+          );
+
           const md = [
             `### Events for ${today}`,
-            ...events.map(
+            ...todaysEvents.map(
               (e) =>
                 `- **${e.subject}** (${e.start} → ${e.end})${
                   e.location ? ` — _${e.location}_` : ""
-                }`
+                }${e.calendarName ? ` — *${e.calendarName}*` : ""}`
             ),
           ].join("\n");
+
           editor.replaceSelection(md + "\n");
-          new Notice(`Inserted ${events.length} events.`);
+          new Notice(`Inserted ${todaysEvents.length} events.`);
         } catch (e: any) {
+          console.error("[OCE] Insert failed:", e);
           new Notice(`Insert failed: ${e?.message || e}`);
         }
       },
     });
 
-    // Toggle sort order (Asc/Desc)
+    // Toggle sort order
     this.addCommand({
       id: "oce-toggle-sort-order",
       name: "Toggle Sort Order (Asc/Desc)",
@@ -69,6 +92,7 @@ export default class ObsidianCalendarPlugin extends Plugin {
           this.settings.sortOrder === "asc" ? "desc" : "asc";
         await this.saveSettings();
         new Notice(`Sort order set to ${this.settings.sortOrder.toUpperCase()}.`);
+
         const events = await this.calendar.fetchEvents();
         await this.pushToView(events);
       },
@@ -92,52 +116,66 @@ export default class ObsidianCalendarPlugin extends Plugin {
         }
 
         const headerOffset = 60;
-        const targetPosition =
+        const target =
           todayElement.getBoundingClientRect().top + window.scrollY - headerOffset;
-
-        window.scrollTo({ top: targetPosition, behavior: "smooth" });
+        window.scrollTo({ top: target, behavior: "smooth" });
         new Notice("Scrolled to Today");
       },
     });
 
-    // Add settings tab
+    // -----------------------------
+    // SETTINGS TAB
+    // -----------------------------
     this.addSettingTab(
       new ObsidianCalendarSettingTab(this.app, this, this.settings, () =>
         this.saveSettings()
       )
     );
 
-    // On first load, show setup instructions if no calendar is configured
+    // -----------------------------
+    // INITIAL LOAD
+    // -----------------------------
     this.app.workspace.onLayoutReady(async () => {
       const leaf = await this.activateView();
       const view = leaf.view as CalendarView;
-
       view.showLoading();
-    
-      if (!this.settings.icalUrl || this.settings.icalUrl.trim() === "") {
-        console.log("[Obsidian Calendar Events] No calendar configured — showing setup message.");
-        view.setEvents([]); // will trigger your CalendarView empty state
-        new Notice("No calendar configured. Open plugin settings to add your iCal or Outlook calendar.");
+
+      const enabledCalendars =
+        this.settings.calendars?.filter((c) => c.enabled && c.url.trim()) ?? [];
+
+      if (enabledCalendars.length === 0) {
+        console.log("[OCE] No calendars configured — showing setup state.");
+        view.setEvents([]);
+        new Notice(
+          "No calendars configured. Open plugin settings to add one or more calendars."
+        );
         return;
       }
-    
+
       try {
         const events = await this.calendar.fetchEvents();
         view.setEvents(events);
       } catch (err) {
         console.warn("[OCE] Startup fetch failed:", err);
-        // Keep the header visible and show a non-blocking empty state
         view.setEvents([]);
-        new Notice("Unable to load calendar events. Check your iCal URL or network.");
+        new Notice(
+          "Unable to load calendar events. Check your calendar URLs or network connection."
+        );
       }
-    });    
+    });
   }
 
+  // -----------------------------
+  // PLUGIN UNLOAD
+  // -----------------------------
   onunload() {
-    console.log("Unloading Obsidian Calendar Events plugin");
+    console.log("[Obsidian Calendar Events] Unloading plugin");
     this.app.workspace.detachLeavesOfType(VIEW_TYPE_SPCALENDAR);
   }
 
+  // -----------------------------
+  // VIEW HANDLING
+  // -----------------------------
   async activateView(): Promise<WorkspaceLeaf> {
     let leaf =
       this.app.workspace.getLeavesOfType(VIEW_TYPE_SPCALENDAR)[0] ||
@@ -151,13 +189,15 @@ export default class ObsidianCalendarPlugin extends Plugin {
 
   private async pushToView(events: CalendarEvent[]) {
     let leaf = this.app.workspace.getLeavesOfType(VIEW_TYPE_SPCALENDAR)[0];
-    if (!leaf) {
-      leaf = await this.activateView();
-    }
+    if (!leaf) leaf = await this.activateView();
+
     const view = leaf.view as CalendarView;
     view.setEvents(events);
   }
 
+  // -----------------------------
+  // SETTINGS HANDLING
+  // -----------------------------
   async openSettingsTab(): Promise<void> {
     try {
       const setting = (this.app as any).setting;
@@ -176,6 +216,29 @@ export default class ObsidianCalendarPlugin extends Plugin {
   async loadSettings() {
     const data = await this.loadData();
     this.settings = Object.assign(structuredClone(DEFAULT_SETTINGS), data);
+
+    // Initialize visibility map if missing
+    if (!this.settings.visibleCalendars) this.settings.visibleCalendars = {};
+
+    // Migration from single-calendar format (legacy)
+    if ((this.settings as any).icalUrl) {
+      const url = (this.settings as any).icalUrl;
+      if (url && typeof url === "string" && url.trim().length > 0) {
+        console.log("[OCE] Migrating legacy iCal URL to new calendars array.");
+        this.settings.calendars = [
+          {
+            id: "default",
+            name: "Primary Calendar",
+            url,
+            color: "#4A90E2",
+            enabled: true,
+          },
+        ];
+        this.settings.visibleCalendars["default"] = true;
+      }
+      delete (this.settings as any).icalUrl;
+      await this.saveSettings();
+    }
   }
 
   async saveSettings() {

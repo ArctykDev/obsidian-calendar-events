@@ -3,7 +3,7 @@ import ObsidianCalendarPlugin from "./main";
 import type { ObsidianCalendarSettings } from "./types";
 
 export const DEFAULT_SETTINGS: ObsidianCalendarSettings = {
-  icalUrl: "",
+  calendars: [], // default empty array
   daysBefore: 0,
   daysAhead: 7,
   sortOrder: "asc",
@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS: ObsidianCalendarSettings = {
   addUnderHeading: false,
   headingName: "Calendar Events",
   firstRun: true,
+  visibleCalendars: {},
 };
 
 export class ObsidianCalendarSettingTab extends PluginSettingTab {
@@ -36,19 +37,77 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
 
     containerEl.createEl("h2", { text: "Obsidian Calendar Events Settings" });
 
-    // iCal URL field
+    // Calendar Sources
     new Setting(containerEl)
-      .setName("iCal URL")
-      .setDesc("Paste a public or shared .ics calendar link")
-      .addText((text) =>
-        text
-          .setPlaceholder("https://example.com/calendar.ics")
-          .setValue(this.settings.icalUrl || "")
-          .onChange(async (value) => {
-            this.settings.icalUrl = value.trim();
+      .setName("Calendar Sources")
+      .setDesc("Manage multiple iCal (.ics) calendar feeds below.");
+
+    const list = containerEl.createDiv();
+    (this.settings.calendars ?? []).forEach((cal, i) => {
+      const row = new Setting(list)
+        .setName(cal.name || `Calendar ${i + 1}`)
+        .addText((t) =>
+          t
+            .setValue(cal.name)
+            .setPlaceholder("Calendar name")
+            .onChange(async (v) => {
+              cal.name = v;
+              await this.save();
+            })
+        )
+        .addText((t) =>
+          t
+            .setPlaceholder("https://example.com/feed.ics")
+            .setValue(cal.url)
+            .onChange(async (v) => {
+              cal.url = v.trim();
+              await this.save();
+            })
+        )
+        .addColorPicker((p) =>
+          p.setValue(cal.color || "#4A90E2").onChange(async (c) => {
+            cal.color = c;
             await this.save();
           })
+        )
+        .addToggle((t) =>
+          t.setValue(cal.enabled).onChange(async (v) => {
+            cal.enabled = v;
+            await this.save();
+          })
+        )
+        .addExtraButton((btn) =>
+          btn
+            .setIcon("trash")
+            .setTooltip("Remove Calendar")
+            .onClick(async () => {
+              this.settings.calendars.splice(i, 1);
+              await this.save();
+              this.display();
+            })
+        );
+    });
+
+    new Setting(containerEl)
+      .addButton((btn) =>
+        btn
+          .setButtonText("Add Calendar")
+          .setCta()
+          .onClick(async () => {
+            this.settings.calendars.push({
+              id: Date.now().toString(),
+              name: "New Calendar",
+              url: "",
+              color: "#4A90E2",
+              enabled: true,
+            });
+            await this.save();
+            this.display();
+          })
       );
+
+    // Add spacing for readability
+    containerEl.createEl("hr");
 
     // Days before today
     new Setting(containerEl)

@@ -1,7 +1,6 @@
 import { requestUrl } from "obsidian";
-import { RRule, RRuleSet, rrulestr } from "rrule";
+import { rrulestr } from "rrule";
 import type { CalendarEvent, ObsidianCalendarSettings } from "./types";
-
 
 /**
  * Full-featured Outlook-compatible ICS parser.
@@ -12,7 +11,6 @@ function parseICS(icsText: string): CalendarEvent[] {
   const unfolded = icsText.replace(/\r?\n[ \t]/g, "");
   const blocks = unfolded.split("BEGIN:VEVENT").slice(1);
 
-  // Temporary maps for recurrence management
   const recurringMasters: Record<string, any> = {};
   const cancelledInstances: Record<string, string[]> = {};
 
@@ -97,7 +95,6 @@ function parseICS(icsText: string): CalendarEvent[] {
       const duration = new Date(m.endISO).getTime() - new Date(m.startISO).getTime();
       const endDate = new Date(new Date(startDate).getTime() + duration).toISOString();
 
-      // Skip canceled instances
       if (cancelledInstances[uid]?.includes(startDate)) continue;
 
       events.push({
@@ -114,125 +111,91 @@ function parseICS(icsText: string): CalendarEvent[] {
   return events.sort((a, b) => a.start.localeCompare(b.start));
 }
 
-
-
 /**
- * Client for fetching and parsing calendar events from an iCal feed.
+ * Client for fetching and parsing multiple iCal feeds.
  */
 export class CalendarClient {
   constructor(private settings: ObsidianCalendarSettings) {}
 
   /**
- * Fetches and parses events from the configured iCal URL.
- * Filters results based on the user's configured date range.
- */
-async fetchEvents(): Promise<CalendarEvent[]> {
-  if (!this.settings.icalUrl || !this.settings.icalUrl.trim()) {
-    throw new Error("No iCal URL configured. Please set one in plugin settings.");
-  }
-
-  try {
-    const response = await requestUrl({ url: this.settings.icalUrl });
-    const icsText = response.text || "";
-
-    if (!icsText.includes("BEGIN:VEVENT")) {
-      throw new Error("Invalid or empty iCal feed.");
+   * Fetches, merges, and filters events from all enabled calendar feeds.
+   */
+  async fetchEvents(): Promise<CalendarEvent[]> {
+    const sources = (this.settings.calendars || []).filter(c => c.enabled && c.url.trim());
+    if (sources.length === 0) {
+      throw new Error("No enabled calendars configured.");
     }
 
-    const allEvents = parseICS(icsText);
+    try {
+      // --- Fetch all enabled calendars concurrently ---
+      const allResults = await Promise.all(
+        sources.map(async (src) => {
+          const response = await requestUrl({ url: src.url });
+          const events = parseICS(response.text);
+          // Tag events with their calendar source
+          return events.map(e => ({
+            ...e,
+            calendarId: src.id,
+            calendarName: src.name,
+            color: src.color || "#4A90E2"
+          }));
+        })
+      );
 
-    // ---- Date range normalization (LOCAL midnight-safe, full-day inclusive) ----
-    const now = new Date();
-    
-    // Start of today in local time
-    const startLocal = new Date(now);
-    startLocal.setHours(0, 0, 0, 0);
-    
-    // Apply configured date window
-    const startBoundary = new Date(
-      startLocal.getTime() - (this.settings.daysBefore ?? 0) * 24 * 3600 * 1000
-    );
-    const endBoundary = new Date(
-      startLocal.getTime() + (this.settings.daysAhead ?? 7) * 24 * 3600 * 1000
-    );
-    
-    // Extend endBoundary to end of day (23:59:59 local)
-    endBoundary.setHours(23, 59, 59, 999);
-    
-    // Add buffer hours to include early/late events near boundaries
-    const bufferHours = 12;
-    const startISO = new Date(startBoundary.getTime() - bufferHours * 3600 * 1000).toISOString();
-    const endISO = new Date(endBoundary.getTime() + bufferHours * 3600 * 1000).toISOString();
-    
-    // Diagnostics
-    console.log("🧭 [Calendar Diagnostics]");
-    console.log("Now:", now.toISOString());
-    console.log("Start boundary (LOCAL midnight):", startISO);
-    console.log("End boundary (LOCAL end of day):", endISO);
-    
+      const allEvents = allResults.flat();
 
-    console.log(
-      "Sample events:",
-      allEvents.slice(0, 5).map((e) => ({
-        subject: e.subject,
-        start: e.start,
-        end: e.end,
-        hasZ: e.start.endsWith("Z"),
-      }))
-    );
+      // --- Date Range Filtering ---
+      const now = new Date();
+      const startLocal = new Date(now);
+      startLocal.setHours(0, 0, 0, 0);
 
-    // ---- Normalize and filter events ----
-    const startBoundaryUTC = new Date(startISO).getTime();
-    const endBoundaryUTC = new Date(endISO).getTime();
-    
-    const filteredEvents = allEvents.filter((ev) => {
-      const start = new Date(ev.start);
-      let end = new Date(ev.end || ev.start);
-    
-      // Adjust for local (floating) times without "Z"
-      if (!ev.start.endsWith("Z")) {
-        const offset = start.getTimezoneOffset() * 60000;
-        start.setTime(start.getTime() - offset);
-        end.setTime(end.getTime() - offset);
-      }
-    
-      // Detect possible all-day (midnight-to-midnight) events
-      const isAllDay = /^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/.test(ev.start);
-    
-      // RFC 5545: DTEND for all-day events is exclusive → subtract one day
-      if (isAllDay && end.getTime() > start.getTime()) {
-        end = new Date(end.getTime() - 24 * 3600 * 1000);
-      }
-    
-      // Convert to timestamps for numeric comparison
-      const startTime = start.getTime();
-      const endTime = end.getTime();
-    
-      // Include any event overlapping the visible window
-      const include =
-        (startTime >= startBoundaryUTC && startTime <= endBoundaryUTC) || // starts in range
-        (endTime >= startBoundaryUTC && endTime <= endBoundaryUTC) ||     // ends in range
-        (startTime <= startBoundaryUTC && endTime >= endBoundaryUTC);     // spans entire range
-    
-      if (!include) {
-        console.debug("⏭️ Skipped event:", {
-          subject: ev.subject,
-          start: ev.start,
-          end: ev.end,
-          reason: "Outside visible range after normalization",
-        });
-      }
-    
-      return include;
-    });
-    
-    console.log("✅ Filtered events after overlap logic:", filteredEvents.length); 
-    
+      const startBoundary = new Date(
+        startLocal.getTime() - (this.settings.daysBefore ?? 0) * 24 * 3600 * 1000
+      );
+      const endBoundary = new Date(
+        startLocal.getTime() + (this.settings.daysAhead ?? 7) * 24 * 3600 * 1000
+      );
+      endBoundary.setHours(23, 59, 59, 999);
 
-    return filteredEvents.sort((a, b) => a.start.localeCompare(b.start));
-  } catch (error: any) {
-    console.error("❌ Error fetching or parsing iCal feed:", error);
-    throw new Error(`Unable to load iCal feed: ${error.message || error}`);
+      const bufferHours = 12;
+      const startISO = new Date(startBoundary.getTime() - bufferHours * 3600 * 1000).toISOString();
+      const endISO = new Date(endBoundary.getTime() + bufferHours * 3600 * 1000).toISOString();
+
+      const startBoundaryUTC = new Date(startISO).getTime();
+      const endBoundaryUTC = new Date(endISO).getTime();
+
+      const filteredEvents = allEvents.filter((ev) => {
+        const start = new Date(ev.start);
+        let end = new Date(ev.end || ev.start);
+
+        if (!ev.start.endsWith("Z")) {
+          const offset = start.getTimezoneOffset() * 60000;
+          start.setTime(start.getTime() - offset);
+          end.setTime(end.getTime() - offset);
+        }
+
+        const isAllDay = /^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/.test(ev.start);
+        if (isAllDay && end.getTime() > start.getTime()) {
+          end = new Date(end.getTime() - 24 * 3600 * 1000);
+        }
+
+        const startTime = start.getTime();
+        const endTime = end.getTime();
+
+        const include =
+          (startTime >= startBoundaryUTC && startTime <= endBoundaryUTC) ||
+          (endTime >= startBoundaryUTC && endTime <= endBoundaryUTC) ||
+          (startTime <= startBoundaryUTC && endTime >= endBoundaryUTC);
+
+        return include;
+      });
+
+      console.log("Filtered events:", filteredEvents.length);
+      return filteredEvents.sort((a, b) => a.start.localeCompare(b.start));
+
+    } catch (error: any) {
+      console.error("Error fetching or parsing iCal feeds:", error);
+      throw new Error(`Unable to load iCal feeds: ${error.message || error}`);
+    }
   }
 }
-}  
