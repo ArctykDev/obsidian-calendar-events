@@ -1,7 +1,81 @@
 import { requestUrl } from "obsidian";
-import { RRule, RRuleSet, rrulestr } from "rrule";
+import { rrulestr } from "rrule";
 import type { CalendarEvent, ObsidianCalendarSettings } from "./types";
+import { normalizeTZID } from "./utils/tzidMap"; 
 
+/**
+ * Parses property lines like DTSTART;TZID=America/New_York:20251105T120000
+ */
+function readProp(line: string): { value: string; tz?: string } {
+  const [left, right] = line.split(":");
+  const value = (right ?? "").trim();
+  const m = left.match(/TZID=([^;]+)/i);
+  const tz = normalizeTZID(m ? m[1].trim() : undefined);
+  return { value, tz };
+}
+
+/**
+ * Converts a wall time string with optional TZID to a UTC ISO string.
+ */
+function zonedWallTimeToUTCISO(dateStr: string, tz?: string): string | null {
+  if (!dateStr) return null;
+
+  const m = dateStr.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?)?$/);
+  if (!m) return null;
+  const [, y, mo, d, hh = "00", mm = "00", ss = "00"] = m;
+  const year = +y, month = +mo, day = +d, hour = +hh, minute = +mm, second = +ss;
+
+  // All-day events (VALUE=DATE)
+  if (!dateStr.includes("T")) {
+    return new Date(Date.UTC(year, month - 1, day, 0, 0, 0)).toISOString();
+  }
+
+  // If already UTC (Z suffix handled elsewhere), this won't be used
+  if (!tz) {
+    const local = new Date(year, month - 1, day, hour, minute, second);
+    return new Date(local.getTime() - local.getTimezoneOffset() * 60000).toISOString();
+  }
+
+  // Compute timezone offset using Intl.DateTimeFormat
+  try {
+    const dtf = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+      hour12: false,
+    });
+    const parts = dtf.formatToParts(new Date(Date.UTC(year, month - 1, day, hour, minute, second)));
+    const obj: any = {};
+    for (const p of parts) obj[p.type] = p.value;
+    const tzWallUTC = Date.UTC(+obj.year, +obj.month - 1, +obj.day, +obj.hour, +obj.minute, +obj.second);
+    const naiveUTC = Date.UTC(year, month - 1, day, hour, minute, second);
+    const offsetMs = tzWallUTC - naiveUTC;
+    const intendedUTC = naiveUTC - offsetMs;
+    return new Date(intendedUTC).toISOString();
+  } catch {
+    return new Date(Date.UTC(year, month - 1, day, hour, minute, second)).toISOString();
+  }
+}
+
+/**
+ * Converts a date/time value and optional TZID to an ISO UTC string.
+ */
+function toISO(val: string, tz?: string): string | null {
+  if (!val) return null;
+  try {
+    if (/^\d{8}$/.test(val)) {
+      // VALUE=DATE
+      const y = val.slice(0, 4);
+      const m = val.slice(4, 6);
+      const d = val.slice(6, 8);
+      return new Date(`${y}-${m}-${d}T00:00:00Z`).toISOString();
+    }
+    if (val.endsWith("Z")) return new Date(val).toISOString();
+    return zonedWallTimeToUTCISO(val, tz);
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Full-featured Outlook-compatible ICS parser.
@@ -12,7 +86,6 @@ function parseICS(icsText: string): CalendarEvent[] {
   const unfolded = icsText.replace(/\r?\n[ \t]/g, "");
   const blocks = unfolded.split("BEGIN:VEVENT").slice(1);
 
-  // Temporary maps for recurrence management
   const recurringMasters: Record<string, any> = {};
   const cancelledInstances: Record<string, string[]> = {};
 
@@ -22,10 +95,10 @@ function parseICS(icsText: string): CalendarEvent[] {
 
     let uid = "";
     let summary = "(no title)";
-    let start = "";
-    let end = "";
+    let start = "", startTz = "";
+    let end = "", endTz = "";
+    let recurrenceId = "", recurrenceTz = "";
     let rrule = "";
-    let recurrenceId = "";
     let location = "";
     let canceled = false;
 
@@ -34,38 +107,23 @@ function parseICS(icsText: string): CalendarEvent[] {
       else if (line.startsWith("SUMMARY")) summary = line.split(":").slice(1).join(":").trim();
       else if (line.startsWith("LOCATION")) location = line.split(":").slice(1).join(":").trim();
       else if (line.startsWith("STATUS:CANCELLED")) canceled = true;
-      else if (line.startsWith("DTSTART")) start = line.split(":").slice(-1)[0].trim();
-      else if (line.startsWith("DTEND")) end = line.split(":").slice(-1)[0].trim();
+      else if (line.startsWith("DTSTART")) {
+        const { value, tz } = readProp(line);
+        start = value; startTz = tz || "";
+      }
+      else if (line.startsWith("DTEND")) {
+        const { value, tz } = readProp(line);
+        end = value; endTz = tz || "";
+      }
       else if (line.startsWith("RRULE:")) rrule = line.substring(6).trim();
-      else if (line.startsWith("RECURRENCE-ID")) recurrenceId = line.split(":").slice(-1)[0].trim();
+      else if (line.startsWith("RECURRENCE-ID")) {
+        const { value, tz } = readProp(line);
+        recurrenceId = value; recurrenceTz = tz || "";
+      }
     }
 
-    const toISO = (val: string): string | null => {
-      if (!val) return null;
-      try {
-        if (/^\d{8}$/.test(val)) {
-          const y = val.slice(0, 4);
-          const m = val.slice(4, 6);
-          const d = val.slice(6, 8);
-          return new Date(`${y}-${m}-${d}T00:00:00Z`).toISOString();
-        }
-        if (val.endsWith("Z")) return new Date(val).toISOString();
-
-        const match = val.match(/^(\d{4})(\d{2})(\d{2})T?(\d{2})(\d{2})(\d{2})?$/);
-        if (match) {
-          const [, y, m, d, hh, mm, ss] = match;
-          const local = new Date(`${y}-${m}-${d}T${hh}:${mm}:${ss || "00"}`);
-          const utc = new Date(local.getTime() - local.getTimezoneOffset() * 60000);
-          return utc.toISOString();
-        }
-        return null;
-      } catch {
-        return null;
-      }
-    };
-
-    const startISO = toISO(start);
-    const endISO = toISO(end);
+    const startISO = toISO(start, startTz || undefined);
+    const endISO = toISO(end, endTz || undefined);
 
     if (!uid || !startISO) continue;
 
@@ -73,7 +131,8 @@ function parseICS(icsText: string): CalendarEvent[] {
       recurringMasters[uid] = { uid, summary, location, startISO, endISO, rrule };
     } else if (recurrenceId && canceled) {
       cancelledInstances[uid] = cancelledInstances[uid] || [];
-      cancelledInstances[uid].push(toISO(recurrenceId)!);
+      const ridISO = toISO(recurrenceId, recurrenceTz || undefined);
+      if (ridISO) cancelledInstances[uid].push(ridISO);
     } else if (!canceled) {
       events.push({
         id: uid + startISO,
@@ -96,8 +155,6 @@ function parseICS(icsText: string): CalendarEvent[] {
       const startDate = date.toISOString();
       const duration = new Date(m.endISO).getTime() - new Date(m.startISO).getTime();
       const endDate = new Date(new Date(startDate).getTime() + duration).toISOString();
-
-      // Skip canceled instances
       if (cancelledInstances[uid]?.includes(startDate)) continue;
 
       events.push({
@@ -114,125 +171,69 @@ function parseICS(icsText: string): CalendarEvent[] {
   return events.sort((a, b) => a.start.localeCompare(b.start));
 }
 
-
-
 /**
- * Client for fetching and parsing calendar events from an iCal feed.
+ * Client for fetching and parsing multiple iCal feeds.
  */
 export class CalendarClient {
   constructor(private settings: ObsidianCalendarSettings) {}
 
-  /**
- * Fetches and parses events from the configured iCal URL.
- * Filters results based on the user's configured date range.
- */
-async fetchEvents(): Promise<CalendarEvent[]> {
-  if (!this.settings.icalUrl || !this.settings.icalUrl.trim()) {
-    throw new Error("No iCal URL configured. Please set one in plugin settings.");
-  }
-
-  try {
-    const response = await requestUrl({ url: this.settings.icalUrl });
-    const icsText = response.text || "";
-
-    if (!icsText.includes("BEGIN:VEVENT")) {
-      throw new Error("Invalid or empty iCal feed.");
+  async fetchEvents(): Promise<CalendarEvent[]> {
+    const sources = (this.settings.calendars || []).filter((c) => c.enabled && c.url.trim());
+    if (sources.length === 0) {
+      throw new Error("No enabled calendars configured.");
     }
 
-    const allEvents = parseICS(icsText);
+    try {
+      const allResults = await Promise.all(
+        sources.map(async (src) => {
+          const response = await requestUrl({ url: src.url });
+          const events = parseICS(response.text);
+          return events.map((e) => ({
+            ...e,
+            calendarId: src.id,
+            calendarName: src.name,
+            color: src.color || "#4A90E2",
+          }));
+        })
+      );
 
-    // ---- Date range normalization (LOCAL midnight-safe, full-day inclusive) ----
-    const now = new Date();
-    
-    // Start of today in local time
-    const startLocal = new Date(now);
-    startLocal.setHours(0, 0, 0, 0);
-    
-    // Apply configured date window
-    const startBoundary = new Date(
-      startLocal.getTime() - (this.settings.daysBefore ?? 0) * 24 * 3600 * 1000
-    );
-    const endBoundary = new Date(
-      startLocal.getTime() + (this.settings.daysAhead ?? 7) * 24 * 3600 * 1000
-    );
-    
-    // Extend endBoundary to end of day (23:59:59 local)
-    endBoundary.setHours(23, 59, 59, 999);
-    
-    // Add buffer hours to include early/late events near boundaries
-    const bufferHours = 12;
-    const startISO = new Date(startBoundary.getTime() - bufferHours * 3600 * 1000).toISOString();
-    const endISO = new Date(endBoundary.getTime() + bufferHours * 3600 * 1000).toISOString();
-    
-    // Diagnostics
-    console.log("🧭 [Calendar Diagnostics]");
-    console.log("Now:", now.toISOString());
-    console.log("Start boundary (LOCAL midnight):", startISO);
-    console.log("End boundary (LOCAL end of day):", endISO);
-    
+      const allEvents = allResults.flat();
 
-    console.log(
-      "Sample events:",
-      allEvents.slice(0, 5).map((e) => ({
-        subject: e.subject,
-        start: e.start,
-        end: e.end,
-        hasZ: e.start.endsWith("Z"),
-      }))
-    );
+      // --- Date Range Filtering ---
+      const now = new Date();
+      const startLocal = new Date(now);
+      startLocal.setHours(0, 0, 0, 0);
 
-    // ---- Normalize and filter events ----
-    const startBoundaryUTC = new Date(startISO).getTime();
-    const endBoundaryUTC = new Date(endISO).getTime();
-    
-    const filteredEvents = allEvents.filter((ev) => {
-      const start = new Date(ev.start);
-      let end = new Date(ev.end || ev.start);
-    
-      // Adjust for local (floating) times without "Z"
-      if (!ev.start.endsWith("Z")) {
-        const offset = start.getTimezoneOffset() * 60000;
-        start.setTime(start.getTime() - offset);
-        end.setTime(end.getTime() - offset);
-      }
-    
-      // Detect possible all-day (midnight-to-midnight) events
-      const isAllDay = /^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/.test(ev.start);
-    
-      // RFC 5545: DTEND for all-day events is exclusive → subtract one day
-      if (isAllDay && end.getTime() > start.getTime()) {
-        end = new Date(end.getTime() - 24 * 3600 * 1000);
-      }
-    
-      // Convert to timestamps for numeric comparison
-      const startTime = start.getTime();
-      const endTime = end.getTime();
-    
-      // Include any event overlapping the visible window
-      const include =
-        (startTime >= startBoundaryUTC && startTime <= endBoundaryUTC) || // starts in range
-        (endTime >= startBoundaryUTC && endTime <= endBoundaryUTC) ||     // ends in range
-        (startTime <= startBoundaryUTC && endTime >= endBoundaryUTC);     // spans entire range
-    
-      if (!include) {
-        console.debug("⏭️ Skipped event:", {
-          subject: ev.subject,
-          start: ev.start,
-          end: ev.end,
-          reason: "Outside visible range after normalization",
-        });
-      }
-    
-      return include;
-    });
-    
-    console.log("✅ Filtered events after overlap logic:", filteredEvents.length); 
-    
+      const startBoundary = new Date(
+        startLocal.getTime() - (this.settings.daysBefore ?? 0) * 24 * 3600 * 1000
+      );
+      const endBoundary = new Date(
+        startLocal.getTime() + (this.settings.daysAhead ?? 7) * 24 * 3600 * 1000
+      );
+      endBoundary.setHours(23, 59, 59, 999);
 
-    return filteredEvents.sort((a, b) => a.start.localeCompare(b.start));
-  } catch (error: any) {
-    console.error("❌ Error fetching or parsing iCal feed:", error);
-    throw new Error(`Unable to load iCal feed: ${error.message || error}`);
+      const bufferHours = 12;
+      const startISO = new Date(startBoundary.getTime() - bufferHours * 3600 * 1000).toISOString();
+      const endISO = new Date(endBoundary.getTime() + bufferHours * 3600 * 1000).toISOString();
+
+      const startBoundaryUTC = new Date(startISO).getTime();
+      const endBoundaryUTC = new Date(endISO).getTime();
+
+      const filtered = allEvents.filter((ev) => {
+        const start = new Date(ev.start).getTime();
+        const end = new Date(ev.end || ev.start).getTime();
+        return (
+          (start >= startBoundaryUTC && start <= endBoundaryUTC) ||
+          (end >= startBoundaryUTC && end <= endBoundaryUTC) ||
+          (start <= startBoundaryUTC && end >= endBoundaryUTC)
+        );
+      });
+
+      console.log("Filtered events:", filtered.length);
+      return filtered.sort((a, b) => a.start.localeCompare(b.start));
+    } catch (error: any) {
+      console.error("Error fetching or parsing iCal feeds:", error);
+      throw new Error(`Unable to load iCal feeds: ${error.message || error}`);
+    }
   }
 }
-}  

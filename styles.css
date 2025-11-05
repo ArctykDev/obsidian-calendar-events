@@ -101,6 +101,20 @@
   transform: scale(1.1);
 }
 
+.spcalendar-collapseall-btn {
+  margin-left: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+.spcalendar-collapseall-btn:hover {
+  color: var(--text-normal);
+}
+
 .spcalendar-loading p {
   font-size: 1.1em;
   color: var(--text-muted);
@@ -141,8 +155,14 @@
   transform: rotate(180deg);
 }
 
+.spcalendar-togglebar button:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+}
+
 /* Range info text */
 .spcalendar-range {
+  text-align: center;
   font-size: 0.85em;
   color: var(--text-muted);
   margin-bottom: 1.2em;
@@ -168,17 +188,26 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.8em;
-  border-bottom: 1px solid var(--background-modifier-border);
-  padding-bottom: 4px;
+  cursor: pointer;
 }
 
 .spcalendar-day-header h3 {
-  font-size: 1.1em;
-  font-weight: 700;
-  color: var(--text-accent);
+  flex-grow: 1;
   margin: 0;
 }
+
+.spcalendar-collapse-icon {
+  font-weight: bold;
+  color: var(--text-muted);
+  -webkit-user-select: none;
+  user-select: none;
+  transition: transform 0.2s ease;
+}
+
+.spcalendar-collapse-icon:hover {
+  color: var(--text-normal);
+}
+
 
 /* Event count badge */
 .spcalendar-badge {

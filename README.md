@@ -19,17 +19,19 @@ Designed for seamless integration with external calendar feeds such as Outlook, 
 
 View previous versions and full changelog [CHANGELOG.md](CHANGELOG.md).
 
+---
+
 ### Welcome View / First Run
 
-![Calendar View Example](src/assets/obsidian-calendar-events-welcome-panel.png)
+![Calendar Events First Run](src/assets/obsidian-calendar-events-welcome-panel.png)
 
 ### Calendar View
 
-![Calendar View Example](src/assets/obsidian-calendar-events.png)
+![Calendar Events View](src/assets/obsidian-calendar-events.png)
 
 ### Settings View
 
-![Calendar View Example](src/assets/obsidian-calendar-events-settings.png)
+![Calendar Events Settings](src/assets/obsidian-calendar-events-0-7-0.png)
 
 
 

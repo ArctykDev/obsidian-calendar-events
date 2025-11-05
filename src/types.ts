@@ -1,10 +1,19 @@
 /**
  * Plugin settings structure for Obsidian Calendar Events.
- * ICS-only version (no authentication, Outlook, or Microsoft Graph dependencies).
+ * Supports multiple ICS calendar feeds (no authentication dependencies).
  */
+
+export interface CalendarSource {
+  id: string;
+  name: string;
+  url: string;
+  color?: string;
+  enabled: boolean;
+}
+
 export interface ObsidianCalendarSettings {
-  // iCal URL to pull events from
-  icalUrl: string;
+  // Calendar sources
+  calendars: CalendarSource[];
 
   // Range of days to include before and after today
   daysBefore: number;
@@ -23,10 +32,17 @@ export interface ObsidianCalendarSettings {
   headingName: string;
 
   firstRun?: boolean;
+
+  // Persisted map of calendar visibility states
+  visibleCalendars?: Record<string, boolean>;
+
+  // Persisted expand/collapse state for each day
+  collapsedDays?: Record<string, boolean>;
 }
 
 /**
- * Basic calendar event structure parsed from the iCal feed.
+ * Calendar event structure parsed from an iCal feed.
+ * Includes metadata linking it to a specific calendar source.
  */
 export interface CalendarEvent {
   id: string;
@@ -35,4 +51,9 @@ export interface CalendarEvent {
   end: string;
   location?: string;
   raw?: any;
+
+  // Added for multi-calendar support
+  calendarId?: string;
+  calendarName?: string;
+  color?: string;
 }
