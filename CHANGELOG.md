@@ -2,9 +2,7 @@
 
 All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
-# Changelog
-
-## [0.7.0] - 2025-11-03  
+## [0.7.0] - 2025-11-05  
 ### Multi-Calendar Management, Visibility Toggles, and Expand/Collapse Controls
 
 This release marks a major enhancement to **Obsidian Calendar Events**, introducing full **multi-calendar support**, persistent **visibility toggles**, and new **expand/collapse controls** for a cleaner and more customizable viewing experience.
