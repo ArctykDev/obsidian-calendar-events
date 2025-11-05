@@ -12,6 +12,7 @@ export const DEFAULT_SETTINGS: ObsidianCalendarSettings = {
   headingName: "Calendar Events",
   firstRun: true,
   visibleCalendars: {},
+  collapsedDays: {},
 };
 
 export class ObsidianCalendarSettingTab extends PluginSettingTab {

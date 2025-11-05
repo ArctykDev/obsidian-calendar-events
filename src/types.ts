@@ -35,6 +35,9 @@ export interface ObsidianCalendarSettings {
 
   // Persisted map of calendar visibility states
   visibleCalendars?: Record<string, boolean>;
+
+  // Persisted expand/collapse state for each day
+  collapsedDays?: Record<string, boolean>;
 }
 
 /**

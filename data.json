@@ -2,7 +2,7 @@
   "calendars": [
     {
       "id": "1762193716314",
-      "name": "SNOLAB",
+      "name": "Arctyk",
       "url": "https://outlook.office365.com/owa/calendar/d7ed2a4a28934e299c22e87ca1ba511e@snolab.ca/aafffd81dea2494897ac948364a95b3217632213243839133226/calendar.ics",
       "color": "#4A90E2",
       "enabled": true
@@ -23,7 +23,7 @@
     }
   ],
   "daysBefore": 0,
-  "daysAhead": 14,
+  "daysAhead": 5,
   "sortOrder": "asc",
   "pinToday": true,
   "addUnderHeading": true,
@@ -33,6 +33,14 @@
     "1762193716314": true,
     "1762193837341": true,
     "1762195946984": true
+  },
+  "collapsedDays": {
+    "2025-11-05": false,
+    "2025-11-06": false,
+    "2025-11-04": false,
+    "2025-11-07": false,
+    "2025-11-10": false,
+    "2025-11-11": false
   },
   "icalUrl": "",
   "clientId": "4e09924c-35e9-46c3-adc4-67ff25b2f0ff",

@@ -219,6 +219,7 @@ export default class ObsidianCalendarPlugin extends Plugin {
 
     // Initialize visibility map if missing
     if (!this.settings.visibleCalendars) this.settings.visibleCalendars = {};
+    if (!this.settings.collapsedDays) this.settings.collapsedDays = {};
 
     // Migration from single-calendar format (legacy)
     if ((this.settings as any).icalUrl) {
@@ -242,6 +243,19 @@ export default class ObsidianCalendarPlugin extends Plugin {
   }
 
   async saveSettings() {
+    // Optional cleanup: keep only the last 30 days of collapsed states
+    const today = new Date().toISOString().slice(0, 10);
+    const keepDays = 30;
+  
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - keepDays);
+  
+    for (const key in this.settings.collapsedDays) {
+      const dayDate = new Date(key);
+      if (dayDate < cutoff) delete this.settings.collapsedDays[key];
+    }
+  
     await this.saveData(this.settings);
   }
+  
 }

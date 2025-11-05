@@ -1,6 +1,6 @@
 {
   "name": "obsidian-calendar-events",
-  "version": "0.6.4",
+  "version": "0.7.0",
   "type": "module",
   "description": "Display and mange iCal (.ics) calendar events directly inside Obsidian.",
   "main": "main.js",
@@ -18,6 +18,7 @@
     "outlook",
     "tasks",
     "gmail",
+    "ics",
     "ical"
   ],
   "author": "James Hawkins",
