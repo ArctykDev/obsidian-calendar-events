@@ -2,6 +2,94 @@
 
 All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
+## [0.7.0] - 2025-11-05  
+### Multi-Calendar Management, Visibility Toggles, and Expand/Collapse Controls
+
+This release marks a major enhancement to **Obsidian Calendar Events**, introducing full **multi-calendar support**, persistent **visibility toggles**, and new **expand/collapse controls** for a cleaner and more customizable viewing experience.
+
+---
+
+### **New Features**
+
+- **Multiple ICS Calendar Sources**  
+  Manage multiple `.ics` calendar feeds directly from the plugin settings.  
+  Each source includes:  
+  - Custom **name**  
+  - **Feed URL**  
+  - **Color**  
+  - **Enable/disable toggle**
+
+- **Color-Coded Events**  
+  Events are now visually color-coded according to their calendar source for better clarity.
+
+- **Per-Calendar Visibility Toggles**  
+  A new toggle bar at the top of the calendar view allows users to show or hide specific calendars.  
+  - Color-coded to match each calendar  
+  - Visibility states are **persisted between sessions**
+
+- **Expand/Collapse Date Headers**  
+  Each day’s events can now be expanded or collapsed individually.  
+  - Collapsed states are **remembered between sessions**  
+  - Adds a cleaner browsing experience when viewing multiple days
+
+- **Collapse/Expand All Button**  
+  A header button (chevrons icon) now allows users to quickly collapse or expand all days.  
+  - Icon and tooltip update dynamically based on current state  
+  - Fully synchronized with individual day states
+
+- **Calendar Legend**  
+  Displays active calendars and their associated colors for an at-a-glance overview.
+
+---
+
+### **UI Enhancements**
+
+- Centered and styled visibility toggle buttons using a Flexbox layout  
+- Added smooth hover and transition effects to toggle buttons  
+- Improved spacing and visual hierarchy in the calendar header and event list  
+- Enhanced header area with dynamic Collapse/Expand All control  
+- Refined empty and loading states to support multi-calendar use cases
+
+---
+
+### **Technical Updates**
+
+- **Settings Schema Updated**
+  - Added `calendars[]` for multiple ICS sources  
+  - Added `visibleCalendars` to persist calendar visibility  
+  - Added `collapsedDays` to persist expanded/collapsed states  
+- **Timezone Handling**
+  - Added `tzidMap.ts` utility to normalize Microsoft/Windows-style TZIDs  
+  - Fixed incorrect timezone conversion for Outlook and Google Calendar feeds  
+  - Events now display in the correct local time zone  
+- **CalendarClient**
+  - Merges events from all enabled calendars concurrently  
+  - Improved UTC normalization and filtering accuracy  
+- **CalendarView**
+  - Renders per-calendar color, toggles, and grouped days  
+  - Supports expand/collapse persistence and global collapse button
+
+---
+
+### **Migration Notice**
+
+Users upgrading from **v0.6.x** will have their existing single `iCal URL` automatically migrated to a new multi-calendar format.  
+No manual action is required — existing events, preferences, and view settings are preserved.
+
+---
+
+### **Summary**
+
+Version **0.7.0** delivers a powerful evolution of Obsidian Calendar Events:
+- Full multi-calendar management  
+- Color-coded and filterable events  
+- Persistent expand/collapse and visibility states  
+- Accurate timezone support  
+
+This release sets the stage for even more interactive, visually-rich calendar experiences within Obsidian.
+
+---
+
 ## [0.6.4] - 2025-11-03
 
 ### New Features

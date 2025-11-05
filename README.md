@@ -27,7 +27,7 @@ View previous versions and full changelog [CHANGELOG.md](CHANGELOG.md).
 
 ### Calendar View
 
-![Calendar Events View](src/assets/obsidian-calendar-events.png)
+![Calendar Events Panel](src/assets/obsidian-calendar-events-panel-0-7-0.png)
 
 ### Settings View
 
