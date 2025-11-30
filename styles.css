@@ -138,7 +138,6 @@
   }
 }
 
-
 /* Sort indicator */
 .spcalendar-sort-indicator {
   cursor: pointer;
@@ -196,18 +195,34 @@
   margin: 0;
 }
 
+/* Day collapse button — Outlook ghost-hover style */
 .spcalendar-collapse-icon {
-  font-weight: bold;
+  width: 24px;
+  height: 24px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  cursor: pointer;
+
   color: var(--text-muted);
-  -webkit-user-select: none;
-  user-select: none;
-  transition: transform 0.2s ease;
+  background: rgba(255, 255, 255, 0); /* invisible by default */
+  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
 }
 
+/* Hover state — light gray circular ghost */
 .spcalendar-collapse-icon:hover {
+  background: rgba(128, 128, 128, 0.15);
   color: var(--text-normal);
+  transform: scale(1.05);
 }
 
+/* Rotated icon when collapsed (already in your logic, preserved) */
+.spcalendar-collapse-icon.rotated {
+  transform: rotate(180deg);
+}
 
 /* Event count badge */
 .spcalendar-badge {
@@ -286,28 +301,47 @@
   color: var(--text-muted);
 }
 
-
-/* Add-to-Daily-Note icon */
+/* Add-to-Daily-Note button in bottom-right corner */
+/* Add-to-Daily-Note button — Outlook ghost-hover style */
 .spcalendar-add-btn {
   position: absolute;
-  top: 8px;
   right: 10px;
+  bottom: 10px;
+
+  width: 26px;
+  height: 26px;
+
+  background: rgba(255, 255, 255, 0); /* fully transparent initially */
+  border-radius: 50%;
+
   border: none;
-  background-color: transparent;
   cursor: pointer;
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
   color: var(--text-muted);
-  opacity: 0;
-  transition: opacity 0.25s ease-in-out 0.4s, color 0.2s ease;
-  padding: 2px;
-  border-radius: 4px;
+  opacity: 0; /* hidden by default */
+  pointer-events: none; /* prevents ghost clicks when hidden */
+
+  transition: opacity 0.18s ease, background 0.18s ease, color 0.18s ease,
+    transform 0.18s ease;
 }
+
+/* Show icon on hover (ghost style) */
 .spcalendar-event:hover .spcalendar-add-btn {
-  opacity: 0.9;
-  transition: opacity 0.25s ease-in-out, color 0.2s ease;
-}
-.spcalendar-add-btn:hover {
-  color: var(--text-normal);
   opacity: 1;
+  pointer-events: auto;
+  background: rgba(128, 128, 128, 0.15); /* light gray circle */
+}
+
+/* Hovering the icon itself (slightly darker, slightly scaled) */
+.spcalendar-add-btn:hover {
+  background: rgba(128, 128, 128, 0.25); /* stronger gray */
+  color: var(--text-normal);
+  transform: scale(1.07);
 }
 
 /* Light mode tweaks */
@@ -333,4 +367,21 @@
     background-color: var(--background-secondary);
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
   }
+}
+
+.spcalendar-event-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.spcalendar-recur-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+  opacity: 0.85;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }

@@ -2,7 +2,49 @@
 
 All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
-## [0.7.0] - 2025-11-05  
+## [0.8.0] — UI Enhancements, Ribbon Icon, and Recurring Event Indicators
+
+Released: 2025-01-22
+
+This release introduces several user-experience improvements, visual refinements inspired by Microsoft Outlook, a new optional ribbon icon, and multiple interaction and layout enhancements.
+
+### Added
+
+- **Optional Ribbon Icon**  
+  A new setting allows users to enable/disable a dedicated ribbon icon for quickly opening the Calendar Events view.
+- **Recurring Event Indicator**  
+  Events generated from recurrence rules are now clearly marked with a recurring icon.
+- **Outlook-Style Ghost Hover Button**  
+  The _Add to Daily Note_ button now matches Outlook’s “ghost-hover” style with a subtle circular hover region.
+- **Day Group Collapse Button Rewrite**  
+  Day headers now use a modern ghost-hover collapse icon for clearer interaction and visual consistency.
+
+### Improved
+
+- **Event Card Layout**  
+  The Add-to-Daily-Note button is now positioned at the bottom-right of each event card, avoiding overlap with other UI elements.
+- **Cleaner Hover Interactions**  
+  Event action UI now appears without shifting layout or leaving empty rows.
+- **Visual Consistency Across Elements**  
+  Icons now follow a unified UI language (spacing, hover transitions, scaling).
+- **Internal Settings Handling**  
+  Ribbon icon state updates immediately when toggled in the settings panel.
+
+### Fixed
+
+- Resolved layout gaps caused by empty action rows.
+- Removed inconsistent spacing around event cards during hover interactions.
+- Ensured the collapse icon and add-button no longer interfere with event title or recurring indicators.
+
+---
+
+## Notes
+
+This release does not introduce any breaking changes but does enhance UI consistency and interaction quality.  
+Recommended for all users.
+
+## [0.7.0] - 2025-11-05
+
 ### Multi-Calendar Management, Visibility Toggles, and Expand/Collapse Controls
 
 This release marks a major enhancement to **Obsidian Calendar Events**, introducing full **multi-calendar support**, persistent **visibility toggles**, and new **expand/collapse controls** for a cleaner and more customizable viewing experience.
@@ -13,28 +55,32 @@ This release marks a major enhancement to **Obsidian Calendar Events**, introduc
 
 - **Multiple ICS Calendar Sources**  
   Manage multiple `.ics` calendar feeds directly from the plugin settings.  
-  Each source includes:  
-  - Custom **name**  
-  - **Feed URL**  
-  - **Color**  
+  Each source includes:
+
+  - Custom **name**
+  - **Feed URL**
+  - **Color**
   - **Enable/disable toggle**
 
 - **Color-Coded Events**  
   Events are now visually color-coded according to their calendar source for better clarity.
 
 - **Per-Calendar Visibility Toggles**  
-  A new toggle bar at the top of the calendar view allows users to show or hide specific calendars.  
-  - Color-coded to match each calendar  
+  A new toggle bar at the top of the calendar view allows users to show or hide specific calendars.
+
+  - Color-coded to match each calendar
   - Visibility states are **persisted between sessions**
 
 - **Expand/Collapse Date Headers**  
-  Each day’s events can now be expanded or collapsed individually.  
-  - Collapsed states are **remembered between sessions**  
+  Each day’s events can now be expanded or collapsed individually.
+
+  - Collapsed states are **remembered between sessions**
   - Adds a cleaner browsing experience when viewing multiple days
 
 - **Collapse/Expand All Button**  
-  A header button (chevrons icon) now allows users to quickly collapse or expand all days.  
-  - Icon and tooltip update dynamically based on current state  
+  A header button (chevrons icon) now allows users to quickly collapse or expand all days.
+
+  - Icon and tooltip update dynamically based on current state
   - Fully synchronized with individual day states
 
 - **Calendar Legend**  
@@ -44,10 +90,10 @@ This release marks a major enhancement to **Obsidian Calendar Events**, introduc
 
 ### **UI Enhancements**
 
-- Centered and styled visibility toggle buttons using a Flexbox layout  
-- Added smooth hover and transition effects to toggle buttons  
-- Improved spacing and visual hierarchy in the calendar header and event list  
-- Enhanced header area with dynamic Collapse/Expand All control  
+- Centered and styled visibility toggle buttons using a Flexbox layout
+- Added smooth hover and transition effects to toggle buttons
+- Improved spacing and visual hierarchy in the calendar header and event list
+- Enhanced header area with dynamic Collapse/Expand All control
 - Refined empty and loading states to support multi-calendar use cases
 
 ---
@@ -55,18 +101,18 @@ This release marks a major enhancement to **Obsidian Calendar Events**, introduc
 ### **Technical Updates**
 
 - **Settings Schema Updated**
-  - Added `calendars[]` for multiple ICS sources  
-  - Added `visibleCalendars` to persist calendar visibility  
-  - Added `collapsedDays` to persist expanded/collapsed states  
+  - Added `calendars[]` for multiple ICS sources
+  - Added `visibleCalendars` to persist calendar visibility
+  - Added `collapsedDays` to persist expanded/collapsed states
 - **Timezone Handling**
-  - Added `tzidMap.ts` utility to normalize Microsoft/Windows-style TZIDs  
-  - Fixed incorrect timezone conversion for Outlook and Google Calendar feeds  
-  - Events now display in the correct local time zone  
+  - Added `tzidMap.ts` utility to normalize Microsoft/Windows-style TZIDs
+  - Fixed incorrect timezone conversion for Outlook and Google Calendar feeds
+  - Events now display in the correct local time zone
 - **CalendarClient**
-  - Merges events from all enabled calendars concurrently  
-  - Improved UTC normalization and filtering accuracy  
+  - Merges events from all enabled calendars concurrently
+  - Improved UTC normalization and filtering accuracy
 - **CalendarView**
-  - Renders per-calendar color, toggles, and grouped days  
+  - Renders per-calendar color, toggles, and grouped days
   - Supports expand/collapse persistence and global collapse button
 
 ---
@@ -81,10 +127,11 @@ No manual action is required — existing events, preferences, and view settings
 ### **Summary**
 
 Version **0.7.0** delivers a powerful evolution of Obsidian Calendar Events:
-- Full multi-calendar management  
-- Color-coded and filterable events  
-- Persistent expand/collapse and visibility states  
-- Accurate timezone support  
+
+- Full multi-calendar management
+- Color-coded and filterable events
+- Persistent expand/collapse and visibility states
+- Accurate timezone support
 
 This release sets the stage for even more interactive, visually-rich calendar experiences within Obsidian.
 
@@ -95,40 +142,39 @@ This release sets the stage for even more interactive, visually-rich calendar ex
 ### New Features
 
 - **Dynamic “Last Updated” label**  
-    Displays when calendar data was last fetched. Updates automatically every minute (for example, “Updated 5 minutes ago”) and hides automatically after 24 hours of inactivity.    
+   Displays when calendar data was last fetched. Updates automatically every minute (for example, “Updated 5 minutes ago”) and hides automatically after 24 hours of inactivity.
 - **Loading indicator**  
-    Added a lightweight “Loading events…” message with a subtle spinner when the plugin first loads or when the user clicks Refresh.    
+   Added a lightweight “Loading events…” message with a subtle spinner when the plugin first loads or when the user clicks Refresh.
 - **Welcome and setup screen**  
-    When no calendar is configured, the plugin now shows a friendly welcome message with an **Open Settings** button.  The header and toolbar remain visible for a consistent interface.    
+   When no calendar is configured, the plugin now shows a friendly welcome message with an **Open Settings** button. The header and toolbar remain visible for a consistent interface.
 - **Auto-loading on startup**  
-    The calendar automatically fetches events on startup if an iCal URL is configured, removing the need for manual refresh.    
+   The calendar automatically fetches events on startup if an iCal URL is configured, removing the need for manual refresh.
 - **Smarter refresh logic**  
-    The Refresh button now handles first-run conditions correctly. If no calendar is configured, it shows the setup screen instead of an endless spinner.    
+   The Refresh button now handles first-run conditions correctly. If no calendar is configured, it shows the setup screen instead of an endless spinner.
 
 ### UI Improvements
 
 - **Cleaner layout**  
-    The “Showing events…” and “Last updated…” lines are hidden when no calendar is configured (first-run or setup state).    
+   The “Showing events…” and “Last updated…” lines are hidden when no calendar is configured (first-run or setup state).
 - **Consistent styling**  
-    Improved text alignment and spacing across all header, loading, and empty states.    
+   Improved text alignment and spacing across all header, loading, and empty states.
 - **Optional fade transition**  
-    Added an optional opacity transition when switching from the loading spinner to the event view (enabled through CSS).   
+   Added an optional opacity transition when switching from the loading spinner to the event view (enabled through CSS).
 
 ### Technical Enhancements
 
-- Added a `showLoading()` helper to `CalendarView` for unified loading behavior during startup and refresh operations.    
-- Introduced `lastUpdated` and `updateTimer` class fields with proper cleanup in `onunload()` to prevent memory leaks.    
-- Updated the `onLayoutReady()` startup logic to show the loading indicator and handle both configured and first-run states cleanly.    
+- Added a `showLoading()` helper to `CalendarView` for unified loading behavior during startup and refresh operations.
+- Introduced `lastUpdated` and `updateTimer` class fields with proper cleanup in `onunload()` to prevent memory leaks.
+- Updated the `onLayoutReady()` startup logic to show the loading indicator and handle both configured and first-run states cleanly.
 - Minor CSS refinements for `.spcalendar-loading`, `.spcalendar-empty`, and `.spcalendar-updated` to align with the Obsidian design language.
-    
 
 ### Tested Scenarios
 
-- First run with no calendar configured → welcome message with **Open Settings** button    
-- Startup with configured calendar → loading spinner → event list    
-- Manual refresh (configured) → loading spinner → refreshed events    
-- Manual refresh (unconfigured) → setup message (no infinite spinner)    
-- Timestamp automatically hides after 24 hours    
+- First run with no calendar configured → welcome message with **Open Settings** button
+- Startup with configured calendar → loading spinner → event list
+- Manual refresh (configured) → loading spinner → refreshed events
+- Manual refresh (unconfigured) → setup message (no infinite spinner)
+- Timestamp automatically hides after 24 hours
 
 ### Summary
 
@@ -137,64 +183,75 @@ This release focuses on refining the user experience, improving the startup flow
 ---
 
 ## [0.6.3] - 2025-11-01
+
 ### Full Outlook Compatibility and iCal Improvements
 
 This release delivers a major enhancement to iCal (ICS) event handling — bringing full compatibility with Outlook and Microsoft 365 calendar feeds.  
 It resolves previous issues where some events appeared late, all-day events were missing, or recurring meetings failed to display.
 
 #### ICS Parsing
-- Rebuilt the `parseICS()` function for full **Outlook/Exchange compatibility**.  
+
+- Rebuilt the `parseICS()` function for full **Outlook/Exchange compatibility**.
 - Added support for:
-  - **Folded multi-line fields** (RFC 5545 compliant).  
-  - **Escaped text** (commas, semicolons, and backslashes).  
-  - **All-day events** using `VALUE=DATE`.  
-  - **Local time zone handling (`TZID=…`)** with correct UTC conversion.  
-  - **Canceled or modified events** (`STATUS:CANCELLED`, `RECURRENCE-ID`).  
+  - **Folded multi-line fields** (RFC 5545 compliant).
+  - **Escaped text** (commas, semicolons, and backslashes).
+  - **All-day events** using `VALUE=DATE`.
+  - **Local time zone handling (`TZID=…`)** with correct UTC conversion.
+  - **Canceled or modified events** (`STATUS:CANCELLED`, `RECURRENCE-ID`).
 - Normalized all timestamps to UTC for consistent rendering in Obsidian.
 
 #### Recurrence (RRULE) Expansion
-- Integrated the **`rrule`** library to expand recurring events exactly as Outlook does.  
+
+- Integrated the **`rrule`** library to expand recurring events exactly as Outlook does.
 - Handles:
-  - Daily, weekly, monthly, and custom recurrence patterns.  
-  - Exclusions and cancellations within a recurring series.  
+  - Daily, weekly, monthly, and custom recurrence patterns.
+  - Exclusions and cancellations within a recurring series.
 - Prevents duplicate or missing recurring instances.
 
 #### Event Filtering and Date Range
-- Adjusted `fetchEvents()` to calculate ranges using **local midnight boundaries**, ensuring complete coverage of each day.  
-- Added a 12-hour buffer on both sides of the date window to capture early-morning and late-night events.  
+
+- Adjusted `fetchEvents()` to calculate ranges using **local midnight boundaries**, ensuring complete coverage of each day.
+- Added a 12-hour buffer on both sides of the date window to capture early-morning and late-night events.
 - Improved overlap logic so events spanning multiple days or starting before/ending after the range are always included.
 
 #### Diagnostics and Stability
-- Added detailed console diagnostics for troubleshooting event visibility and time-zone alignment.  
-- Improved error handling for malformed ICS data.  
+
+- Added detailed console diagnostics for troubleshooting event visibility and time-zone alignment.
+- Improved error handling for malformed ICS data.
 - Enhanced performance and parsing stability.
 
 ---
 
 ### Result
+
 The plugin now matches Outlook’s calendar view exactly — including recurring meetings, all-day events, cancellations, and localized start/end times — while maintaining smooth performance and reliability inside Obsidian.
 
 ---
 
-## [v0.6.0] — UI Improvements  
-**Release Date:** 2025-10-28  
+## [v0.6.0] — UI Improvements
+
+**Release Date:** 2025-10-28
 
 ### New Features
+
 - Added **“No events”** message for days without any calendar entries.
 - Improved **calendar header** to use a theme-aware background with transparency and `backdrop-filter` blur.
 - Enhanced UI consistency with Obsidian’s built-in and community themes.
 
 ### Improvements
+
 - Reordered vendor-prefixed CSS properties for linter compliance.
 - Prevented event cards from scrolling underneath the sticky header.
 - Updated version numbers in `manifest.json`, `package.json`, and `versions.json`.
 
 ---
 
-## [v0.5.1] — Add to Daily Note Feature  
-**Release Date:** 2025-10-28  
+## [v0.5.1] — Add to Daily Note Feature
+
+**Release Date:** 2025-10-28
 
 ### New Features
+
 - Added the ability to insert calendar events directly into your Daily Note.
 - Events are now added as Markdown checklist items (`- [ ] ...`).
 - Introduced new settings:
@@ -204,15 +261,18 @@ The plugin now matches Outlook’s calendar view exactly — including recurring
 - Prevents duplicate blank lines between heading and newly inserted tasks.
 
 ### Improvements
+
 - Improved note formatting consistency when adding multiple events.
 - Maintains all existing calendar features (sorting, pinned today, refresh button, and iCal support).
 
 ---
 
-## [0.5.0] — Stable Release  
-**Release Date:** 2025-10-25  
+## [0.5.0] — Stable Release
+
+**Release Date:** 2025-10-25
 
 ### Highlights
+
 - Initial public release of **Obsidian Calendar Events**.
 - Added iCal event fetching and grouping by day.
 - Added sorting options (ascending/descending).
@@ -223,7 +283,9 @@ The plugin now matches Outlook’s calendar view exactly — including recurring
 ---
 
 ### Versioning
+
 This plugin follows [Semantic Versioning](https://semver.org/):
-- **MAJOR** — Breaking changes  
-- **MINOR** — New features, backward-compatible  
+
+- **MAJOR** — Breaking changes
+- **MINOR** — New features, backward-compatible
 - **PATCH** — Fixes or small improvements

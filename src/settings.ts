@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS: ObsidianCalendarSettings = {
   addUnderHeading: false,
   headingName: "Calendar Events",
   firstRun: true,
+  showRibbonIcon: true,
   visibleCalendars: {},
   collapsedDays: {},
 };
@@ -196,6 +197,19 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
             .onChange(async (value) => {
               this.settings.headingName = value.trim() || "Calendar Events";
               await this.save();
+            })
+        );
+
+      new Setting(containerEl)
+        .setName("Show Ribbon Icon")
+        .setDesc("Adds a calendar icon to the Obsidian ribbon for quick access.")
+        .addToggle((toggle) =>
+          toggle
+            .setValue(this.settings.showRibbonIcon ?? true)
+            .onChange(async (value) => {
+              this.settings.showRibbonIcon = value;
+              await this.save();
+              this.plugin.refreshRibbonIcon();      // NEW call
             })
         );
     }

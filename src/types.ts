@@ -33,6 +33,8 @@ export interface ObsidianCalendarSettings {
 
   firstRun?: boolean;
 
+  showRibbonIcon?: boolean;
+
   // Persisted map of calendar visibility states
   visibleCalendars?: Record<string, boolean>;
 
@@ -50,6 +52,7 @@ export interface CalendarEvent {
   start: string;
   end: string;
   location?: string;
+  isRecurring?: boolean;
   raw?: any;
 
   // Added for multi-calendar support

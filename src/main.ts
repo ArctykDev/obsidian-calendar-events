@@ -8,6 +8,8 @@ export default class ObsidianCalendarPlugin extends Plugin {
   settings!: ObsidianCalendarSettings;
   calendar!: CalendarClient;
 
+  private ribbonEl: HTMLElement | null = null;   // <-- NEW
+
   async onload() {
     console.log("[Obsidian Calendar Events] Loading plugin...");
 
@@ -19,6 +21,11 @@ export default class ObsidianCalendarPlugin extends Plugin {
 
     // Register the custom calendar view
     this.registerView(VIEW_TYPE_SPCALENDAR, (leaf) => new CalendarView(leaf, this));
+
+    // ----------------------------------
+    // RIBBON ICON (NEW)
+    // ----------------------------------
+    this.refreshRibbonIcon();
 
     // -----------------------------
     // COMMANDS
@@ -68,8 +75,7 @@ export default class ObsidianCalendarPlugin extends Plugin {
             `### Events for ${today}`,
             ...todaysEvents.map(
               (e) =>
-                `- **${e.subject}** (${e.start} → ${e.end})${
-                  e.location ? ` — _${e.location}_` : ""
+                `- **${e.subject}** (${e.start} → ${e.end})${e.location ? ` — _${e.location}_` : ""
                 }${e.calendarName ? ` — *${e.calendarName}*` : ""}`
             ),
           ].join("\n");
@@ -166,10 +172,40 @@ export default class ObsidianCalendarPlugin extends Plugin {
   }
 
   // -----------------------------
+  // RIBBON ICON HANDLING (NEW)
+  // -----------------------------
+  refreshRibbonIcon() {
+    // Remove existing icon if present
+    if (this.ribbonEl) {
+      this.ribbonEl.detach();
+      this.ribbonEl = null;
+    }
+
+    // Add new icon only if setting enabled
+    if (this.settings.showRibbonIcon) {
+      this.ribbonEl = this.addRibbonIcon(
+        "calendar", // icon ID
+        "Open Calendar Events",
+        async () => {
+          const leaf = await this.activateView();
+          this.app.workspace.revealLeaf(leaf);
+        }
+      );
+    }
+  }
+
+  // -----------------------------
   // PLUGIN UNLOAD
   // -----------------------------
   onunload() {
     console.log("[Obsidian Calendar Events] Unloading plugin");
+
+    // Clean up ribbon icon
+    if (this.ribbonEl) {
+      this.ribbonEl.detach();
+      this.ribbonEl = null;
+    }
+
     this.app.workspace.detachLeavesOfType(VIEW_TYPE_SPCALENDAR);
   }
 
@@ -246,16 +282,15 @@ export default class ObsidianCalendarPlugin extends Plugin {
     // Optional cleanup: keep only the last 30 days of collapsed states
     const today = new Date().toISOString().slice(0, 10);
     const keepDays = 30;
-  
+
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - keepDays);
-  
+
     for (const key in this.settings.collapsedDays) {
       const dayDate = new Date(key);
       if (dayDate < cutoff) delete this.settings.collapsedDays[key];
     }
-  
+
     await this.saveData(this.settings);
   }
-  
 }
