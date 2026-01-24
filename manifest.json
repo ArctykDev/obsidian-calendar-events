@@ -1,10 +1,10 @@
 {
   "id": "obsidian-calendar-events",
   "name": "Calendar Events",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "minAppVersion": "1.5.0",
   "description": "Display and manage iCal (.ics) calendar events directly inside Obsidian. Supports any public ICS feed (Google, Outlook, Apple, etc.).",
   "author": "James Hawkins",
-  "authorUrl": "https://arctyk.dev",
+  "authorUrl": "https://github.com/ArctykDev",
   "isDesktopOnly": false
 }

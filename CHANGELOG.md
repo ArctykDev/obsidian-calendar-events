@@ -2,6 +2,34 @@
 
 All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
+## [0.8.1] — Google Calendar Support and Cache-Busting Fix
+
+Released: 2026-01-24
+
+This release fixes critical issues preventing Google Calendar ICS feeds from displaying events and ensures the refresh button always fetches fresh calendar data.
+
+### Fixed
+
+- **Google Calendar ICS Parsing**  
+  Fixed parsing of UTC timestamps with 'Z' suffix (e.g., `20260124T150000Z`). Google Calendar events were previously skipped due to incorrect date parsing logic. Now properly handles compact iCal format by converting to UTC before parsing.
+
+- **Calendar Refresh Caching Issue**  
+  Added cache-busting HTTP headers (`Cache-Control`, `Pragma`, `Expires`) to ensure the refresh button always fetches fresh data from calendar servers instead of returning cached results.
+
+- **Individual Calendar Error Handling**  
+  Improved error handling so that failures in one calendar feed don't crash the entire plugin. Each calendar now has independent error handling with console warnings.
+
+### Improved
+
+- **Enhanced Diagnostic Logging**  
+  Added detailed console logging showing:
+  - Number of VEVENT blocks parsed per calendar
+  - Number of events successfully parsed from each calendar
+  - Warnings for skipped events with missing UIDs or invalid dates
+  - Per-calendar fetch failures with specific error messages
+
+---
+
 ## [0.8.0] — UI Enhancements, Ribbon Icon, and Recurring Event Indicators
 
 Released: 2025-01-22

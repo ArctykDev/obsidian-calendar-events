@@ -2,7 +2,7 @@
   "calendars": [
     {
       "id": "1762193716314",
-      "name": "Arctyk",
+      "name": "SNOLAB",
       "url": "https://outlook.office365.com/owa/calendar/d7ed2a4a28934e299c22e87ca1ba511e@snolab.ca/aafffd81dea2494897ac948364a95b3217632213243839133226/calendar.ics",
       "color": "#4A90E2",
       "enabled": true
@@ -11,14 +11,21 @@
       "id": "1762193837341",
       "name": "IT Team",
       "url": "https://outlook.office365.com/owa/calendar/d7ed2a4a28934e299c22e87ca1ba511e@snolab.ca/634a6cfb93bb4f8899a7a0e35661646618144612950006706428/calendar.ics",
-      "color": "#e24b4b",
+      "color": "#df4be2",
       "enabled": true
     },
     {
       "id": "1762195946984",
-      "name": "Personal",
+      "name": "Outlook",
       "url": "https://outlook.live.com/owa/calendar/35c67300-81a5-4619-899c-4280bc060fe4/d0ba04e9-71d3-4d13-af8e-38eded96f248/cid-AAF8767C3A4A4663/calendar.ics",
       "color": "#03b800",
+      "enabled": true
+    },
+    {
+      "id": "1769269347979",
+      "name": "Gmail",
+      "url": "https://calendar.google.com/calendar/ical/arctykit%40gmail.com/public/basic.ics",
+      "color": "#cc1400",
       "enabled": true
     }
   ],
@@ -31,22 +38,13 @@
   "firstRun": false,
   "showRibbonIcon": true,
   "visibleCalendars": {
-    "1762193716314": true,
-    "1762193837341": true,
-    "1762195946984": true
+    "1762193716314": false,
+    "1762193837341": false,
+    "1762195946984": true,
+    "1769269347979": true
   },
   "collapsedDays": {
-    "2025-11-05": true,
-    "2025-11-06": false,
-    "2025-11-04": true,
-    "2025-11-07": true,
-    "2025-11-10": true,
-    "2025-11-11": true,
-    "2025-11-27": false,
-    "2025-12-01": false,
-    "2025-12-02": false,
-    "2025-12-03": false,
-    "2025-11-28": false
+    "2026-01-24": false
   },
   "icalUrl": "",
   "clientId": "4e09924c-35e9-46c3-adc4-67ff25b2f0ff",

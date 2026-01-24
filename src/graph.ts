@@ -110,8 +110,13 @@ function toISO(val: string, tz?: string): string | null {
       return new Date(`${y}-${m}-${d}T00:00:00Z`).toISOString();
     }
 
-    // Already UTC
-    if (val.endsWith("Z")) return new Date(val).toISOString();
+    // Already UTC (with Z suffix) - must parse compact format first
+    // Google Calendar often uses: 20260124T150000Z
+    if (val.endsWith("Z")) {
+      const stripped = val.slice(0, -1); // Remove 'Z'
+      const utcISO = zonedWallTimeToUTCISO(stripped, "UTC");
+      return utcISO;
+    }
 
     // TZID / floating local
     return zonedWallTimeToUTCISO(val, tz);
@@ -136,6 +141,8 @@ function parseICS(
   const events: CalendarEvent[] = [];
   const unfolded = icsText.replace(/\r?\n[ \t]/g, "");
   const blocks = unfolded.split("BEGIN:VEVENT").slice(1);
+
+  console.log(`[OCE] Parsing ${blocks.length} VEVENT blocks`);
 
   const recurringMasters: Record<string, any> = {};
   const cancelledInstances: Record<string, string[]> = {};
@@ -186,7 +193,10 @@ function parseICS(
     const startISO = toISO(start, startTz || undefined);
     const endISO = toISO(end, endTz || undefined);
 
-    if (!uid || !startISO) continue;
+    if (!uid || !startISO) {
+      console.warn(`[OCE] Skipping event - uid: ${!!uid}, startISO: ${!!startISO}, start: ${start}`);
+      continue;
+    }
 
     // Master recurring event
     if (rrule && !recurrenceId) {
@@ -339,23 +349,37 @@ export class CalendarClient {
       // ---- Fetch and parse all calendars ----
       const allResults = await Promise.all(
         sources.map(async (src: any) => {
-          const response = await requestUrl({ url: src.url });
-          const icsText = response.text || "";
+          try {
+            const response = await requestUrl({ 
+              url: src.url,
+              headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+              }
+            });
+            const icsText = response.text || "";
 
-          if (!icsText.includes("BEGIN:VEVENT")) {
+            if (!icsText.includes("BEGIN:VEVENT")) {
+              console.warn(`[OCE] No VEVENT blocks found in calendar: ${src.name}`);
+              return [] as CalendarEventWithCalendar[];
+            }
+
+            const rawEvents = parseICS(icsText, startBoundary, endBoundary);
+            console.log(`[OCE] Parsed ${rawEvents.length} events from ${src.name}`);
+
+            const withMeta: CalendarEventWithCalendar[] = rawEvents.map((e) => ({
+              ...e,
+              calendarId: src.id,
+              calendarName: src.name,
+              color: src.color || "#4A90E2",
+            }));
+
+            return withMeta;
+          } catch (err) {
+            console.error(`[OCE] Failed to fetch calendar "${src.name}":`, err);
             return [] as CalendarEventWithCalendar[];
           }
-
-          const rawEvents = parseICS(icsText, startBoundary, endBoundary);
-
-          const withMeta: CalendarEventWithCalendar[] = rawEvents.map((e) => ({
-            ...e,
-            calendarId: src.id,
-            calendarName: src.name,
-            color: src.color || "#4A90E2",
-          }));
-
-          return withMeta;
         })
       );
 
