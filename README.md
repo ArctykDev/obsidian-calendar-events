@@ -126,3 +126,14 @@ You can easily install this plugin using the BRAT (Beta Reviewers Auto-update Te
     ```
 7. Restart Obsidian and enable Obsidian Calendar Events in the Community Plugins settings.
 
+# Support
+
+If you have questions or would like to request a new feature, please visit the [Discussion board](https://github.com/ArctykDev/obsidian-calendar-events/discussions).
+
+Plugin Documentation coming soon. 
+
+# Follow me
+
+Interested in a project management plugin? Check out my other Obisidan plugin: [Project Planner](https://projectplanner.md)
+
+- Project Planner repo: [github.com/ArctykDev/obsidian-project-planner](https://github.com/ArctykDev/obsidian-project-planner)

@@ -38,7 +38,7 @@ export class CalendarView extends ItemView {
   setEvents(events: CalendarEvent[] | null | undefined) {
     this.events = Array.isArray(events) ? events : [];
     this.lastUpdated = new Date();
-  
+
     // Sync visible calendar states
     this.visibleCalendars = { ...this.plugin.settings.visibleCalendars };
     // Sync collapsed days from settings
@@ -50,13 +50,13 @@ export class CalendarView extends ItemView {
         this.visibleCalendars[cal.id] = true;
       }
     }
-  
+
     this.plugin.settings.visibleCalendars = this.visibleCalendars;
     this.plugin.saveSettings();
 
     this.render();
   }
-  
+
 
   showLoading(message = "Loading calendar events...") {
     const container = this.containerEl;
@@ -93,10 +93,10 @@ export class CalendarView extends ItemView {
       toggleBar.style.marginBottom = "10px";
       toggleBar.style.padding = "4px 0";
       toggleBar.style.justifyContent = "center";
-    
+
       for (const cal of enabledCalendars) {
         const isVisible = this.visibleCalendars[cal.id] ?? true;
-    
+
         const toggle = toggleBar.createEl("button", { text: cal.name });
         toggle.style.border = "1px solid var(--background-modifier-border)";
         toggle.style.borderRadius = "6px";
@@ -107,7 +107,7 @@ export class CalendarView extends ItemView {
           ? cal.color || "var(--interactive-accent)"
           : "var(--background-secondary)";
         toggle.style.color = isVisible ? "#fff" : "var(--text-muted)";
-    
+
         toggle.onclick = async () => {
           // Toggle visibility and persist immediately
           this.visibleCalendars[cal.id] = !isVisible;
@@ -117,7 +117,7 @@ export class CalendarView extends ItemView {
         };
       }
     }
-    
+
 
 
     // Left: Title + Sort
@@ -189,25 +189,25 @@ export class CalendarView extends ItemView {
       cls: "spcalendar-collapseall-btn",
       attr: { "aria-label": "Collapse or Expand All Days" },
     });
-    
+
     // Set initial icon based on state
     const allCollapsed = Object.values(this.collapsedDays).length > 0 &&
       Object.values(this.collapsedDays).every((v) => v === true);
-    
+
     setIcon(toggleCollapseBtn, allCollapsed ? "chevrons-up" : "chevrons-down");
     toggleCollapseBtn.setAttr(
       "title",
       allCollapsed ? "Expand All Days" : "Collapse All Days"
     );
-    
+
     toggleCollapseBtn.addEventListener("click", async () => {
       const currentlyCollapsed =
         Object.values(this.collapsedDays).length > 0 &&
         Object.values(this.collapsedDays).every((v) => v === true);
-    
+
       // If all collapsed, expand all; otherwise collapse all
       const newState = !currentlyCollapsed;
-    
+
       // Apply new state to all days present in this view
       const allDays = [
         ...new Set(Object.keys(this.collapsedDays).concat(Object.keys(grouped))),
@@ -215,22 +215,22 @@ export class CalendarView extends ItemView {
       for (const day of allDays) {
         this.collapsedDays[day] = newState;
       }
-    
+
       // Persist changes
       this.plugin.settings.collapsedDays = this.collapsedDays;
       await this.plugin.saveSettings();
-    
+
       // Update button icon and label dynamically
       setIcon(toggleCollapseBtn, newState ? "chevrons-up" : "chevrons-down");
       toggleCollapseBtn.setAttr(
         "title",
         newState ? "Expand All Days" : "Collapse All Days"
       );
-    
+
       new Notice(newState ? "Collapsed all days" : "Expanded all days");
       this.render();
     });
-    
+
 
     const settingsBtn = rightSection.createEl("button", {
       cls: "spcalendar-settings-btn",
@@ -320,7 +320,7 @@ export class CalendarView extends ItemView {
     // GROUP BY DAY ---------------------------------------------------
     const grouped: Record<string, CalendarEvent[]> = {};
     for (const ev of this.events) {
-      if (ev.calendarId && this.visibleCalendars[ev.calendarId] === false) continue;    
+      if (ev.calendarId && this.visibleCalendars[ev.calendarId] === false) continue;
       if (!ev?.start) continue;
       const day = moment(ev.start).isValid()
         ? moment(ev.start).format("YYYY-MM-DD")
@@ -349,32 +349,32 @@ export class CalendarView extends ItemView {
       const eventsForDay = (grouped[day] ?? []).sort(
         (a, b) => a.start.localeCompare(b.start) * sortOrder
       );
-    
+
       const isToday = day === todayKey;
       const dayContainer = wrapper.createDiv({
         cls: `spcalendar-day${isToday ? " spcalendar-today" : ""}`,
       });
-    
+
       if (isToday) todayElement = dayContainer;
-    
+
       // Header row (clickable for expand/collapse)
       const headerRow = dayContainer.createDiv({ cls: "spcalendar-day-header" });
       const headerText = isToday
         ? `Today — ${moment(day).format("dddd, MMMM Do YYYY")}`
         : moment(day).format("dddd, MMMM Do YYYY");
-    
+
       const headerLabel = headerRow.createEl("h3", { text: headerText });
       const badge = headerRow.createEl("span", {
         text: `${eventsForDay.length}`,
         cls: "spcalendar-badge",
       });
-    
+
       // Expand/Collapse indicator
       const toggleIcon = headerRow.createSpan({ cls: "spcalendar-collapse-icon" });
       toggleIcon.textContent = this.collapsedDays[day] ? "▶" : "▼";
       toggleIcon.style.marginLeft = "8px";
       toggleIcon.style.cursor = "pointer";
-    
+
       // Clickable header area to toggle
       headerRow.addEventListener("click", async () => {
         this.collapsedDays[day] = !this.collapsedDays[day];
@@ -382,12 +382,12 @@ export class CalendarView extends ItemView {
         await this.plugin.saveSettings();
         this.render();
       });
-      
-    
+
+
       // Container for events
       const eventContainer = dayContainer.createDiv({ cls: "spcalendar-events" });
       eventContainer.style.display = this.collapsedDays[day] ? "none" : "block";
-    
+
       if (eventsForDay.length === 0) {
         eventContainer.createEl("p", {
           text: "No events",
@@ -395,15 +395,23 @@ export class CalendarView extends ItemView {
         });
         continue;
       }
-    
+
       for (const e of eventsForDay) {
         const card = eventContainer.createDiv({ cls: "spcalendar-event" });
         if (e.color) card.style.borderLeft = `4px solid ${e.color}`;
-        card.createEl("div", {
+        const titleRow = card.createDiv({ cls: "spcalendar-event-title-row" });
+
+        titleRow.createSpan({
           text: e.subject || "(no title)",
           cls: "spcalendar-event-title",
         });
-    
+
+        // Recurring indicator
+        if (e.isRecurring) {
+          const recurIcon = titleRow.createSpan({ cls: "spcalendar-recur-icon" });
+          setIcon(recurIcon, "refresh-ccw");
+        }
+
         const timeRow = card.createDiv({ cls: "spcalendar-row" });
         const timeIcon = timeRow.createSpan({ cls: "spcalendar-icon" });
         setIcon(timeIcon, "clock");
@@ -413,7 +421,7 @@ export class CalendarView extends ItemView {
           )}`,
           cls: "spcalendar-time-text",
         });
-    
+
         if (e.location) {
           const locRow = card.createDiv({ cls: "spcalendar-row" });
           const locIcon = locRow.createSpan({ cls: "spcalendar-icon" });
@@ -423,7 +431,22 @@ export class CalendarView extends ItemView {
             cls: "spcalendar-location-text",
           });
         }
-    
+
+        // Bottom action row (right-aligned)
+        const actionRow = card.createDiv({ cls: "spcalendar-action-row" });
+
+        const addBtn = actionRow.createEl("button", {
+          cls: "spcalendar-add-btn",
+          attr: { "aria-label": "Add to Daily Note" },
+        });
+        setIcon(addBtn, "file-plus");
+        addBtn.setAttr("title", "Add to Daily Note");
+
+        addBtn.addEventListener("click", async (ev) => {
+          ev.stopPropagation();
+          await this.addEventToDailyNote(e);
+        });
+
         // Optional calendar label
         if (e.calendarName) {
           const source = card.createDiv({ cls: "spcalendar-row" });
@@ -437,28 +460,9 @@ export class CalendarView extends ItemView {
             cls: "spcalendar-calendar-name",
           });
         }
-    
-        const addBtn = card.createEl("button", {
-          cls: "spcalendar-add-btn hidden",
-          attr: { "aria-label": "Add to Daily Note" },
-        });
-        setIcon(addBtn, "file-plus");
-        addBtn.setAttr("title", "Add to Daily Note");
-    
-        addBtn.addEventListener("click", async (ev) => {
-          ev.stopPropagation();
-          await this.addEventToDailyNote(e);
-        });
-    
-        card.addEventListener("mouseenter", () => {
-          addBtn.classList.remove("hidden");
-        });
-        card.addEventListener("mouseleave", () => {
-          addBtn.classList.add("hidden");
-        });
       }
     }
-    
+
 
     if (todayElement) {
       setTimeout(() => {
@@ -483,9 +487,8 @@ export class CalendarView extends ItemView {
       const content = await app.vault.read(dailyNote);
       const newTask = `- [ ] ${event.subject} (${moment(event.start).format(
         "h:mm A"
-      )} - ${moment(event.end).format("h:mm A")})${
-        event.location ? ` - ${event.location}` : ""
-      }`;
+      )} - ${moment(event.end).format("h:mm A")})${event.location ? ` - ${event.location}` : ""
+        }`;
 
       let updated = content.trim();
       if (this.plugin.settings.addUnderHeading) {
