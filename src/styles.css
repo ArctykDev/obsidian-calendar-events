@@ -1,3 +1,54 @@
+/* ========================================================================= */
+/* SETTINGS HEADER & VERSION                                                 */
+/* ========================================================================= */
+
+.oce-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--background-modifier-border);
+}
+
+.oce-settings-header h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.oce-settings-version {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.oce-version-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.oce-changelog-link {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.oce-changelog-link:hover {
+  color: var(--interactive-accent);
+  text-decoration: underline;
+}
+
+/* ========================================================================= */
+/* CALENDAR VIEW                                                             */
+/* ========================================================================= */
+
 /* Main wrapper */
 .spcalendar-wrapper {
   /* Fix: padding-top must be first and not overridden */

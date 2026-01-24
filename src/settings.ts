@@ -37,7 +37,24 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "Obsidian Calendar Events Settings" });
+    // Plugin header with version
+    const headerEl = containerEl.createDiv({ cls: "oce-settings-header" });
+    headerEl.createEl("h2", { text: "Calendar Events Settings" });
+
+    const versionEl = headerEl.createDiv({ cls: "oce-settings-version" });
+    versionEl.createEl("span", {
+      text: `v${this.plugin.manifest.version}`,
+      cls: "oce-version-badge"
+    });
+
+    // Add link to changelog
+    const changelogLink = versionEl.createEl("a", {
+      text: "Changelog",
+      cls: "oce-changelog-link",
+      href: "https://github.com/ArctykDev/obsidian-calendar-events/blob/main/CHANGELOG.md"
+    });
+    changelogLink.setAttribute("target", "_blank");
+    changelogLink.setAttribute("rel", "noopener noreferrer");
 
     // Calendar Sources
     new Setting(containerEl)
