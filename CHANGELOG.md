@@ -2,6 +2,42 @@
 
 All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
+## [0.8.3] — Recurring Event DST Fix & Timezone Map Expansion
+
+Released: 2026-03-23
+
+This release fixes a DST-related time offset bug specific to recurring calendar events and expands the Windows timezone name map to cover all major global regions.
+
+### Fixed
+
+- **Recurring events off by 1 hour after DST transitions**  
+  Recurring event expansion (RRULE) was building `DTSTART` from the UTC-converted ISO string rather than the original wall-clock value from the ICS. This caused rrule to repeat the same UTC instant each week, which is correct while the UTC offset stays the same but produces a 1-hour error on every occurrence after a spring-forward or fall-back transition. Fixed by passing the original raw `DTSTART` wall-clock string to rrule as a floating (no Z) time, then re-converting each generated occurrence to UTC using the original TZID and the DST-aware `zonedWallTimeToUTCISO` function. UTC-stamped events (explicit Z suffix) continue to use the UTC-based path since UTC has no DST.
+
+- **Missing Windows timezone TZID names causing incorrect UTC conversion**  
+  The `normalizeTZID` map contained only 11 entries and was missing all `*Daylight Time` variants (e.g. `Eastern Daylight Time`, `Pacific Daylight Time`) used by Outlook and Exchange during summer months, all European Windows timezone names (`W. Europe Standard Time`, `GMT Standard Time`, etc.), and all Asian/Pacific/Australian names. Unrecognised names fell through to the Intl catch block and were treated as UTC, producing an offset equal to the full timezone difference. Replaced the stub map with a comprehensive CLDR-derived map covering all standard Windows timezone names globally.
+
+- **Quoted TZID values not recognised**  
+  Some calendar servers emit `TZID="America/New_York"` with surrounding quotes. The captured string included the quotes, making it unrecognisable to both the map and `Intl`. `readProp` now strips leading and trailing single or double quotes from TZID values before normalisation.
+
+- **`readProp` splitting on first `:` only**  
+  Property values containing colons (e.g. URLs in `LOCATION` or `DESCRIPTION`) were silently truncated. `readProp` now uses `indexOf(":")` and `slice` so only the first colon is treated as the key/value separator.
+
+- **Unrecognised timezone IDs now logged as warnings**  
+  Added a `[OCE] Unrecognised timezone` console warning in the Intl fallback path so edge-case TZID strings from specific calendar servers can be identified and added to the map.
+
+### Internal
+
+- **CI: `package-lock.json` committed**  
+  `npm ci` (used in the GitHub Actions release workflow) requires a lock file. One was never committed, so every CI run failed at the install step. Lock file is now present.
+
+- **CI: `minAppVersion` corrected in workflow**  
+  The release workflow was writing `"1.4.0"` as the minimum Obsidian version into `versions.json` on every release. Corrected to `"1.5.0"` to match `manifest.json`.
+
+- **Security: Rollup and minimatch patched**  
+  Updated Rollup from `^4.12.0` to `^4.60.0` (fixes GHSA-mw96-cpmx-2vgc: Arbitrary File Write via Path Traversal) and patched transitive `minimatch` ReDoS vulnerabilities.
+
+---
+
 ## [0.8.2] — Timezone & DST Fixes, Code Quality, and Settings Corrections
 
 Released: 2026-03-23
