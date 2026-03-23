@@ -38,9 +38,9 @@ jobs:
 
           jq --arg v "$VERSION" '.version = $v' manifest.json > manifest.tmp && mv manifest.tmp manifest.json
           if [ -f versions.json ]; then
-            jq --arg v "$VERSION" '. + {($v): "1.4.0"}' versions.json > versions.tmp && mv versions.tmp versions.json
+            jq --arg v "$VERSION" '. + {($v): "1.5.0"}' versions.json > versions.tmp && mv versions.tmp versions.json
           else
-            echo "{ \"$VERSION\": \"1.4.0\" }" > versions.json
+            echo "{ \"$VERSION\": \"1.5.0\" }" > versions.json
           fi
 
       - name: Build plugin
