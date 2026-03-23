@@ -36,9 +36,6 @@ This release fixes a DST-related time offset bug that caused events to display 1
 
 ### Improved
 
-- **Externalized `moment` to reduce bundle size**  
-  Obsidian exposes `moment` as a runtime global. Added it to Rollup's `external` list and removed it from `package.json` dependencies, eliminating ~70 KB from the bundled `main.js`.
-
 - **Removed redundant internal type**  
   The internal `CalendarEventWithCalendar` interface in `graph.ts` extended `CalendarEvent` with fields that were already defined on that interface. Removed the duplicate and typed all usages directly as `CalendarEvent`.
 

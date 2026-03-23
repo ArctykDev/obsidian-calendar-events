@@ -9,10 +9,13 @@ import { normalizeTZID } from "./utils/tzidMap";
  *   DTSTART;VALUE=DATE:20251105
  */
 function readProp(line: string): { value: string; tz?: string } {
-  const [left, right] = line.split(":");
-  const value = (right ?? "").trim();
+  const colonIdx = line.indexOf(":");
+  const left = colonIdx === -1 ? line : line.slice(0, colonIdx);
+  const value = colonIdx === -1 ? "" : line.slice(colonIdx + 1).trim();
   const m = left.match(/TZID=([^;]+)/i);
-  const tz = normalizeTZID(m ? m[1].trim() : undefined);
+  // Strip surrounding quotes that some servers emit: TZID="America/New_York"
+  const rawTz = m ? m[1].trim().replace(/^"|"$/g, "").replace(/^'|'$/g, "") : undefined;
+  const tz = normalizeTZID(rawTz);
   return { value, tz };
 }
 
@@ -99,7 +102,10 @@ function zonedWallTimeToUTCISO(dateStr: string, tz?: string): string | null {
 
     return new Date(intendedUTC).toISOString();
   } catch {
-    // Fallback: assume the wall time is already UTC
+    // Fallback: assume the wall time is already UTC.
+    // This fires when `tz` is not a valid IANA identifier — log so it can be
+    // added to the normalizeTZID map if needed.
+    console.warn(`[OCE] Unrecognised timezone "${tz}" — treating as UTC. Event time may be incorrect.`);
     return new Date(Date.UTC(year, month - 1, day, hour, minute, second)).toISOString();
   }
 }
