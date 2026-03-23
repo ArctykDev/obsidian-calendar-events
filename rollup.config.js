@@ -11,7 +11,7 @@ export default {
     format: "cjs",
     exports: "default",
   },
-  external: ["obsidian"],
+  external: ["obsidian", "moment"],
   plugins: [
     resolve({
       browser: true,

@@ -115,16 +115,17 @@ export default class ObsidianCalendarPlugin extends Plugin {
           return;
         }
 
-        const todayElement = document.querySelector(".spcalendar-today") as HTMLElement;
+        // Query inside the view's own container so we scroll the plugin pane,
+        // not the browser window (which has no effect inside Obsidian).
+        const todayElement = leaf.view.containerEl.querySelector(
+          ".spcalendar-today"
+        ) as HTMLElement | null;
         if (!todayElement) {
           new Notice("No 'Today' section found.");
           return;
         }
 
-        const headerOffset = 60;
-        const target =
-          todayElement.getBoundingClientRect().top + window.scrollY - headerOffset;
-        window.scrollTo({ top: target, behavior: "smooth" });
+        todayElement.scrollIntoView({ behavior: "smooth", block: "start" });
         new Notice("Scrolled to Today");
       },
     });

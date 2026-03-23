@@ -38,14 +38,12 @@
   "firstRun": false,
   "showRibbonIcon": true,
   "visibleCalendars": {
-    "1762193716314": false,
+    "1762193716314": true,
     "1762193837341": false,
     "1762195946984": true,
     "1769269347979": true
   },
-  "collapsedDays": {
-    "2026-01-24": false
-  },
+  "collapsedDays": {},
   "icalUrl": "",
   "clientId": "4e09924c-35e9-46c3-adc4-67ff25b2f0ff",
   "tenantId": "5e73a657-e250-4c32-8632-2c101a949a19",

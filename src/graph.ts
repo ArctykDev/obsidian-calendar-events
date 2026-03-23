@@ -1,16 +1,7 @@
 import { requestUrl } from "obsidian";
 import { rrulestr } from "rrule";
-import type { CalendarEvent, ObsidianCalendarSettings } from "./types";
+import type { CalendarEvent, CalendarSource, ObsidianCalendarSettings } from "./types";
 import { normalizeTZID } from "./utils/tzidMap";
-
-/**
- * Internal extension of CalendarEvent with calendar metadata.
- */
-interface CalendarEventWithCalendar extends CalendarEvent {
-  calendarId?: string;
-  calendarName?: string;
-  color?: string;
-}
 
 /**
  * Parses property lines like:
@@ -51,10 +42,11 @@ function zonedWallTimeToUTCISO(dateStr: string, tz?: string): string | null {
     return new Date(Date.UTC(year, month - 1, day, 0, 0, 0)).toISOString();
   }
 
-  // Floating times (no TZID, no Z) – assume local machine timezone
+  // Floating times (no TZID, no Z) – treat as local machine timezone.
+  // new Date(y, m, d, h, min, s) creates a local-time Date; .toISOString()
+  // converts it to the correct UTC equivalent.
   if (!tz) {
-    const local = new Date(year, month - 1, day, hour, minute, second);
-    return new Date(local.getTime() - local.getTimezoneOffset() * 60000).toISOString();
+    return new Date(year, month - 1, day, hour, minute, second).toISOString();
   }
 
   // TZID-based time — compute intended UTC using Intl
@@ -88,7 +80,23 @@ function zonedWallTimeToUTCISO(dateStr: string, tz?: string): string | null {
     const naiveUTC = Date.UTC(year, month - 1, day, hour, minute, second);
     const offsetMs = tzWallUTC - naiveUTC;
 
-    const intendedUTC = naiveUTC - offsetMs;
+    let intendedUTC = naiveUTC - offsetMs;
+
+    // DST guard: the probe UTC time may straddle a DST transition boundary,
+    // so the offset it observes might belong to the wrong DST regime.
+    // Example: on US spring-forward day (Mar 8 2026), an event at 3 AM EDT
+    // has probe=03:00 UTC (still EST, −5h) → first guess = 08:00 UTC (wrong).
+    // Re-evaluating the offset AT the candidate time corrects it to 07:00 UTC.
+    // One iteration is sufficient for all real-world ±1h DST transitions.
+    const verifyParts = dtf.formatToParts(new Date(intendedUTC));
+    const v: Record<string, string> = {};
+    for (const p of verifyParts) v[p.type] = p.value;
+    const verifyWallUTC = Date.UTC(+v.year, +v.month - 1, +v.day, +v.hour, +v.minute, +v.second);
+    const verifyOffsetMs = verifyWallUTC - intendedUTC;
+    if (verifyOffsetMs !== offsetMs) {
+      intendedUTC = naiveUTC - verifyOffsetMs;
+    }
+
     return new Date(intendedUTC).toISOString();
   } catch {
     // Fallback: assume the wall time is already UTC
@@ -306,9 +314,9 @@ export class CalendarClient {
   constructor(private settings: ObsidianCalendarSettings) { }
 
   async fetchEvents(): Promise<CalendarEvent[]> {
-    const sources =
-      (this.settings as any).calendars?.filter(
-        (c: any) => c.enabled && c.url && c.url.trim()
+    const sources: CalendarSource[] =
+      this.settings.calendars?.filter(
+        (c) => c.enabled && c.url && c.url.trim()
       ) ?? [];
 
     if (!sources.length) {
@@ -326,12 +334,13 @@ export class CalendarClient {
       const daysBefore = this.settings.daysBefore ?? 0;
       const daysAhead = this.settings.daysAhead ?? 7;
 
-      const startBoundary = new Date(
-        startLocal.getTime() - daysBefore * 24 * 3600 * 1000
-      );
-      const endBoundary = new Date(
-        startLocal.getTime() + daysAhead * 24 * 3600 * 1000
-      );
+      // Use setDate (not ms arithmetic) so DST transitions don't shift the
+      // boundary by an hour and silently drop all-day events.
+      const startBoundary = new Date(startLocal);
+      startBoundary.setDate(startBoundary.getDate() - daysBefore);
+
+      const endBoundary = new Date(startLocal);
+      endBoundary.setDate(endBoundary.getDate() + daysAhead);
       endBoundary.setHours(23, 59, 59, 999);
 
       // Add buffer hours to include early/late events near boundaries
@@ -348,54 +357,45 @@ export class CalendarClient {
 
       // ---- Fetch and parse all calendars ----
       const allResults = await Promise.all(
-        sources.map(async (src: any) => {
+        sources.map(async (src) => {
           try {
-            const response = await requestUrl({ 
+            const response = await requestUrl({
               url: src.url,
               headers: {
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-                'Expires': '0'
-              }
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+              },
             });
             const icsText = response.text || "";
 
             if (!icsText.includes("BEGIN:VEVENT")) {
               console.warn(`[OCE] No VEVENT blocks found in calendar: ${src.name}`);
-              return [] as CalendarEventWithCalendar[];
+              return [] as CalendarEvent[];
             }
 
             const rawEvents = parseICS(icsText, startBoundary, endBoundary);
             console.log(`[OCE] Parsed ${rawEvents.length} events from ${src.name}`);
 
-            const withMeta: CalendarEventWithCalendar[] = rawEvents.map((e) => ({
+            return rawEvents.map((e) => ({
               ...e,
               calendarId: src.id,
               calendarName: src.name,
               color: src.color || "#4A90E2",
-            }));
-
-            return withMeta;
+            })) as CalendarEvent[];
           } catch (err) {
             console.error(`[OCE] Failed to fetch calendar "${src.name}":`, err);
-            return [] as CalendarEventWithCalendar[];
+            return [] as CalendarEvent[];
           }
         })
       );
 
-      const allEvents: CalendarEventWithCalendar[] = allResults.flat();
+      const allEvents: CalendarEvent[] = allResults.flat();
 
       // ---- Normalize and filter events to visible window ----
       const filtered = allEvents.filter((ev) => {
-        let start = new Date(ev.start);
+        const start = new Date(ev.start);
         let end = new Date(ev.end || ev.start);
-
-        // Adjust for local (floating) times without "Z"
-        if (!ev.start.endsWith("Z")) {
-          const offset = start.getTimezoneOffset() * 60000;
-          start = new Date(start.getTime() - offset);
-          end = new Date(end.getTime() - offset);
-        }
 
         // Detect possible all-day (midnight-to-midnight) events
         const isAllDay = /^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/.test(ev.start);

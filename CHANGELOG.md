@@ -2,6 +2,54 @@
 
 All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
+## [0.8.2] — Timezone & DST Fixes, Code Quality, and Settings Corrections
+
+Released: 2026-03-23
+
+This release fixes a DST-related time offset bug that caused events to display 1 hour ahead on or after a daylight saving transition, corrects several settings UI and calendar view issues, and improves internal code quality.
+
+### Fixed
+
+- **Events showing 1 hour ahead after DST transitions**  
+  The UTC conversion algorithm (`zonedWallTimeToUTCISO`) used an Intl probe at a naive UTC timestamp that could straddle a DST boundary in the wrong direction. The offset it calculated belonged to the wrong DST regime (e.g., EST instead of EDT), shifting events by exactly 1 hour. Added a verification step that re-evaluates the UTC offset at the candidate time and corrects the result when the DST state differs. Events on non-transition days are completely unaffected.
+
+- **Floating-time events displayed at wrong local time**  
+  Floating iCal times (no TZID, no Z suffix) were converted to UTC with an erroneous double timezone-offset subtraction. The fix uses `new Date(y, m, d, h, min, s).toISOString()` directly, which correctly converts local wall time to UTC.
+
+- **DST-unsafe date range boundary calculation**  
+  `startBoundary` and `endBoundary` were computed using raw millisecond arithmetic (`Date.getTime() ± days * 86400000`). On spring-forward days this lands 1 hour past midnight, causing all-day events at the start of that day to be missed. Replaced with `setDate()` which operates in local calendar days and is immune to DST transitions.
+
+- **"Show ribbon icon" setting only visible when "Add under heading" was enabled**  
+  The ribbon icon toggle was incorrectly nested inside the `addUnderHeading` conditional block in the settings UI. Moved it outside so it is always visible.
+
+- **`scroll-to-today` command scrolled the browser window instead of the plugin pane**  
+  The command used `document.querySelector` + `window.scrollTo`, which has no effect inside Obsidian's panel layout. Changed to query inside the view's own container and use `scrollIntoView`.
+
+- **`ReferenceError` in collapse-all button handler when events list is empty**  
+  The collapse-all button's event listener referenced `const grouped` before it was declared, which would throw a `ReferenceError` if the user clicked the button while the view was in its empty state. Pre-computed `grouped` at the top of `render()` before any early returns.
+
+- **Unescaped user input passed to `new RegExp()`**  
+  The `headingName` setting was used raw in a `new RegExp()` constructor when inserting events into daily notes. Special regex characters (e.g. `(`, `.`, `*`) in the heading name would produce an invalid or unintended regex. Added proper escaping before constructing the expression.
+
+- **`window.setInterval` timer leaked on view close**  
+  The "updated X minutes ago" display timer had no cleanup when the view was detached. Added an `onClose()` lifecycle method to `CalendarView` that clears the interval.
+
+### Improved
+
+- **Externalized `moment` to reduce bundle size**  
+  Obsidian exposes `moment` as a runtime global. Added it to Rollup's `external` list and removed it from `package.json` dependencies, eliminating ~70 KB from the bundled `main.js`.
+
+- **Removed redundant internal type**  
+  The internal `CalendarEventWithCalendar` interface in `graph.ts` extended `CalendarEvent` with fields that were already defined on that interface. Removed the duplicate and typed all usages directly as `CalendarEvent`.
+
+- **Removed unnecessary `as any` casts in `CalendarClient`**  
+  `(this.settings as any).calendars` and `src: any` were replaced with properly-typed `CalendarSource[]`, restoring full type safety in the fetch pipeline.
+
+- **Added missing `rimraf` dev dependency**  
+  The `clean` npm script called `rimraf` but it was not declared in `devDependencies`. Added `rimraf ^5.0.0`.
+
+---
+
 ## [0.8.1] — Google Calendar Support and Cache-Busting Fix
 
 Released: 2026-01-24

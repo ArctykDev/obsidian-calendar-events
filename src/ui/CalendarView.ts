@@ -78,6 +78,19 @@ export class CalendarView extends ItemView {
       return;
     }
 
+    // Pre-compute grouped events here so the collapse-all button handler
+    // can safely reference `grouped` even when the events list is empty.
+    const grouped: Record<string, CalendarEvent[]> = {};
+    for (const ev of this.events) {
+      if (ev.calendarId && this.visibleCalendars[ev.calendarId] === false) continue;
+      if (!ev?.start) continue;
+      const day = moment(ev.start).isValid()
+        ? moment(ev.start).format("YYYY-MM-DD")
+        : "unknown";
+      if (!grouped[day]) grouped[day] = [];
+      grouped[day].push(ev);
+    }
+
     const wrapper = container.createDiv({ cls: "spcalendar-wrapper" });
 
     // HEADER BAR ---------------------------------------------------
@@ -318,16 +331,8 @@ export class CalendarView extends ItemView {
     }
 
     // GROUP BY DAY ---------------------------------------------------
-    const grouped: Record<string, CalendarEvent[]> = {};
-    for (const ev of this.events) {
-      if (ev.calendarId && this.visibleCalendars[ev.calendarId] === false) continue;
-      if (!ev?.start) continue;
-      const day = moment(ev.start).isValid()
-        ? moment(ev.start).format("YYYY-MM-DD")
-        : "unknown";
-      if (!grouped[day]) grouped[day] = [];
-      grouped[day].push(ev);
-    }
+    // (grouped is pre-computed at the top of render() to be available
+    // to the collapse-all button handler above.)
 
     const sortOrder = this.plugin.settings.sortOrder === "asc" ? 1 : -1;
     const todayKey = moment().format("YYYY-MM-DD");
@@ -493,7 +498,9 @@ export class CalendarView extends ItemView {
       let updated = content.trim();
       if (this.plugin.settings.addUnderHeading) {
         const heading = `## ${this.plugin.settings.headingName}`;
-        const headingRegex = new RegExp(`^#{1,6}\\s+${this.plugin.settings.headingName}\\s*$`, "m");
+        // Escape special regex characters from user-supplied heading name
+        const safeName = this.plugin.settings.headingName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const headingRegex = new RegExp(`^#{1,6}\\s+${safeName}\\s*$`, "m");
         if (headingRegex.test(content)) {
           const lines = content.split("\n");
           const index = lines.findIndex((line) => headingRegex.test(line));
@@ -511,6 +518,13 @@ export class CalendarView extends ItemView {
     } catch (err) {
       console.error("Failed to add event to daily note:", err);
       new Notice("Error adding event to daily note.");
+    }
+  }
+
+  async onClose() {
+    if (this.updateTimer) {
+      window.clearInterval(this.updateTimer);
+      this.updateTimer = null;
     }
   }
 }
