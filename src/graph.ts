@@ -223,6 +223,8 @@ function parseICS(
         rrule,
         startRaw: start,
         startTz,
+        endRaw: end,
+        endTz,
       };
       continue;
     }
@@ -273,17 +275,71 @@ function parseICS(
   for (const uid in recurringMasters) {
     const m = recurringMasters[uid];
 
-    // Build RRULE with its DTSTART derived from normalized startISO
-    const dtStart = m.startISO.replace(/[-:]/g, "").split(".")[0] + "Z";
-    const rule = rrulestr(`DTSTART:${dtStart}\nRRULE:${m.rrule}`);
+    // Three cases for DTSTART handling:
+    //
+    // 1. TZID events (America/New_York etc.)
+    //    Use the raw wall-clock string as a FLOATING DTSTART so rrule
+    //    preserves the wall-clock hour across DST transitions. Then re-convert
+    //    each occurrence back to UTC using the original TZID.
+    //    If we used UTC Z-time instead, rrule would repeat the same UTC instant
+    //    every week — correct in winter, but 1h off after spring-forward.
+    //
+    // 2. UTC events (DTSTART:...Z — no TZID, explicit Z)
+    //    UTC has no DST, so the original UTC-based approach is correct.
+    //    date.toISOString() works directly.
+    //
+    // 3. Floating events (no TZID, no Z)
+    //    Use the raw wall-clock string as DTSTART, re-convert each occurrence
+    //    as local machine time.
+
+    const isUTC = m.startRaw.endsWith("Z");
+    const hasTzid = !!(m.startTz);
+
+    let rule;
+    if (isUTC) {
+      // Case 2: keep UTC DTSTART — no DST consideration needed
+      const dtStartUTC = m.startISO.replace(/[-:]/g, "").split(".")[0] + "Z";
+      rule = rrulestr(`DTSTART:${dtStartUTC}\nRRULE:${m.rrule}`);
+    } else {
+      // Cases 1 & 3: floating DTSTART using original wall-clock digits
+      rule = rrulestr(`DTSTART:${m.startRaw}\nRRULE:${m.rrule}`);
+    }
+
     const between = rule.between(startBoundary, endBoundary, true);
 
+    // Duration in ms — computed from UTC ISO strings, so timezone-independent.
     const durationMs =
       new Date(m.endISO ?? m.startISO).getTime() - new Date(m.startISO).getTime();
 
     for (const date of between) {
-      const startDateISO = date.toISOString();
-      const endDateISO = new Date(date.getTime() + durationMs).toISOString();
+      let startDateISO: string;
+
+      if (isUTC) {
+        // Case 2: date is already a proper UTC instant
+        startDateISO = date.toISOString();
+      } else if (hasTzid) {
+        // Case 1: rrule floating-mode stores wall-clock digits in UTC fields.
+        // Rebuild the wall-clock string and convert with the original TZID.
+        const wallStr =
+          String(date.getUTCFullYear()).padStart(4, "0") +
+          String(date.getUTCMonth() + 1).padStart(2, "0") +
+          String(date.getUTCDate()).padStart(2, "0") +
+          "T" +
+          String(date.getUTCHours()).padStart(2, "0") +
+          String(date.getUTCMinutes()).padStart(2, "0") +
+          String(date.getUTCSeconds()).padStart(2, "0");
+        startDateISO = zonedWallTimeToUTCISO(wallStr, m.startTz) ?? date.toISOString();
+      } else {
+        // Case 3: floating — treat UTC fields as local wall-clock time
+        startDateISO = new Date(
+          date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),
+          date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds()
+        ).toISOString();
+      }
+
+      const endDateISO = new Date(
+        new Date(startDateISO).getTime() + durationMs
+      ).toISOString();
 
       // Canceled occurrences
       if (cancelledInstances[uid]?.includes(startDateISO)) {
