@@ -2,6 +2,34 @@
 
 All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
+## [0.8.5] — Bug Fixes & Improvements
+
+Released: 2026-09-24
+
+### Fixed
+
+- **All-day events displayed "12:00 AM → 12:00 AM" instead of "All Day"**  
+  Events with `VALUE=DATE` (no time component) now carry an `isAllDay` flag set during parsing. The view renders "All Day" for these events, and the daily note insertion task omits the time range. The RFC 5545 DTEND exclusion logic in the filter now uses this proper flag instead of a fragile midnight-UTC regex heuristic.
+
+- **Untracked `setTimeout` for scroll-to-today could fire on a detached DOM**  
+  The 250ms scroll timer was not cancelled when `render()` was called again before it fired. It is now stored in `scrollTimer`, cleared at the start of each render, and cleaned up in `onClose()`.
+
+- **Sort-order toggle command made an unnecessary network fetch**  
+  After toggling sort order, the command re-fetched all calendar URLs even though the view already held the events. It now calls `view.refresh()` to re-render with the existing event list.
+
+### Improved
+
+- **Double-sorting removed**  
+  `parseICS()` was sorting its return value before `fetchEvents()` sorted the merged output. The inner sort is removed; only the final sort after merging all calendars remains.
+
+- **Settings text fields now debounce saves**  
+  Calendar name, URL, days before/after, and heading name fields previously wrote to disk on every keystroke. They now wait 500ms after the last keystroke before saving.
+
+- **Removed chatty `console.log` statements from fetch path**  
+  Per-fetch debug logs (VEVENT block counts, per-calendar event counts, filtered event counts) are removed from production. Warnings and errors are retained.
+
+---
+
 ## [0.8.4] — Bug Fixes
 
 Released: 2026-09-24

@@ -20,6 +20,15 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
   plugin: ObsidianCalendarPlugin;
   settings: ObsidianCalendarSettings;
   save: () => Promise<void>;
+  private saveDebounceTimer: number | null = null;
+
+  private debouncedSave() {
+    if (this.saveDebounceTimer !== null) window.clearTimeout(this.saveDebounceTimer);
+    this.saveDebounceTimer = window.setTimeout(() => {
+      this.saveDebounceTimer = null;
+      this.save();
+    }, 500);
+  }
 
   constructor(
     app: App,
@@ -69,18 +78,18 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
           t
             .setValue(cal.name)
             .setPlaceholder("Calendar name")
-            .onChange(async (v) => {
+            .onChange((v) => {
               cal.name = v;
-              await this.save();
+              this.debouncedSave();
             })
         )
         .addText((t) =>
           t
             .setPlaceholder("https://example.com/feed.ics")
             .setValue(cal.url)
-            .onChange(async (v) => {
+            .onChange((v) => {
               cal.url = v.trim();
-              await this.save();
+              this.debouncedSave();
             })
         )
         .addColorPicker((p) =>
@@ -136,10 +145,10 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
         text
           .setPlaceholder("0")
           .setValue(this.settings.daysBefore.toString())
-          .onChange(async (value) => {
+          .onChange((value) => {
             const parsed = parseInt(value, 10);
             this.settings.daysBefore = Math.max(isNaN(parsed) ? 0 : parsed, 0);
-            await this.save();
+            this.debouncedSave();
           })
       );
 
@@ -151,10 +160,10 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
         text
           .setPlaceholder("7")
           .setValue(this.settings.daysAhead.toString())
-          .onChange(async (value) => {
+          .onChange((value) => {
             const parsed = parseInt(value, 10);
             this.settings.daysAhead = Math.max(isNaN(parsed) ? 7 : parsed, 0);
-            await this.save();
+            this.debouncedSave();
           })
       );
 
@@ -211,9 +220,9 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
           text
             .setPlaceholder("Calendar Events")
             .setValue(this.settings.headingName)
-            .onChange(async (value) => {
+            .onChange((value) => {
               this.settings.headingName = value.trim() || "Calendar Events";
-              await this.save();
+              this.debouncedSave();
             })
         );
     }

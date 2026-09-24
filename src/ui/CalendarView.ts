@@ -16,6 +16,7 @@ export class CalendarView extends ItemView {
   private plugin: ObsidianCalendarPlugin;
   private lastUpdated: Date | null = null;
   private updateTimer: number | null = null;
+  private scrollTimer: number | null = null;
   private collapsedDays: Record<string, boolean> = {};
 
   constructor(leaf: WorkspaceLeaf, plugin: ObsidianCalendarPlugin) {
@@ -36,6 +37,10 @@ export class CalendarView extends ItemView {
   }
 
   async setEvents(events: CalendarEvent[] | null | undefined) {
+    if (this.scrollTimer !== null) {
+      window.clearTimeout(this.scrollTimer);
+      this.scrollTimer = null;
+    }
     this.events = Array.isArray(events) ? events : [];
     this.lastUpdated = new Date();
 
@@ -57,6 +62,10 @@ export class CalendarView extends ItemView {
     this.render();
   }
 
+
+  refresh() {
+    this.render();
+  }
 
   showLoading(message = "Loading calendar events...") {
     const container = this.containerEl;
@@ -421,9 +430,9 @@ export class CalendarView extends ItemView {
         const timeIcon = timeRow.createSpan({ cls: "spcalendar-icon" });
         setIcon(timeIcon, "clock");
         timeRow.createSpan({
-          text: `${moment(e.start).format("h:mm A")} → ${moment(e.end).format(
-            "h:mm A"
-          )}`,
+          text: e.isAllDay
+            ? "All Day"
+            : `${moment(e.start).format("h:mm A")} → ${moment(e.end).format("h:mm A")}`,
           cls: "spcalendar-time-text",
         });
 
@@ -470,8 +479,9 @@ export class CalendarView extends ItemView {
 
 
     if (todayElement) {
-      setTimeout(() => {
-        todayElement.scrollIntoView({ behavior: "smooth", block: "start" });
+      this.scrollTimer = window.setTimeout(() => {
+        this.scrollTimer = null;
+        todayElement?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 250);
     }
   }
@@ -490,10 +500,10 @@ export class CalendarView extends ItemView {
       }
 
       const content = await app.vault.read(dailyNote);
-      const newTask = `- [ ] ${event.subject} (${moment(event.start).format(
-        "h:mm A"
-      )} - ${moment(event.end).format("h:mm A")})${event.location ? ` - ${event.location}` : ""
-        }`;
+      const timeStr = event.isAllDay
+        ? "All Day"
+        : `${moment(event.start).format("h:mm A")} - ${moment(event.end).format("h:mm A")}`;
+      const newTask = `- [ ] ${event.subject} (${timeStr})${event.location ? ` - ${event.location}` : ""}`;
 
       let updated = content.trim();
       if (this.plugin.settings.addUnderHeading) {
@@ -522,6 +532,10 @@ export class CalendarView extends ItemView {
   }
 
   async onClose() {
+    if (this.scrollTimer !== null) {
+      window.clearTimeout(this.scrollTimer);
+      this.scrollTimer = null;
+    }
     if (this.updateTimer) {
       window.clearInterval(this.updateTimer);
       this.updateTimer = null;

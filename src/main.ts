@@ -104,8 +104,9 @@ export default class ObsidianCalendarPlugin extends Plugin {
         await this.saveSettings();
         new Notice(`Sort order set to ${this.settings.sortOrder.toUpperCase()}.`);
 
-        const events = await this.calendar.fetchEvents();
-        await this.pushToView(events);
+        // Re-render with already-loaded events — no network fetch needed
+        const leaf = this.app.workspace.getLeavesOfType(VIEW_TYPE_SPCALENDAR)[0];
+        if (leaf) (leaf.view as CalendarView).refresh();
       },
     });
 
