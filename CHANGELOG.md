@@ -2,6 +2,24 @@
 
 All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
+## [0.8.6] — Calendar URL Diagnostics
+
+Released: 2026-09-24
+
+### Fixed
+
+- **Escape sequences displayed literally in event titles and locations**  \n  iCal TEXT properties escape special characters as `\,` `\;` `\n` `\\` per RFC 5545. The parser was passing these raw strings to the UI, so locations like `Location ON P0M 1N0\, Canada` displayed with the literal backslash-comma. A `unescapeText()` helper now strips all standard iCal escape sequences from SUMMARY and LOCATION before the event is stored.
+
+- **Silent failure when a calendar URL is wrong or unreachable**  
+  Fetch errors and invalid feed responses were only logged to the developer console, leaving users with no events and no explanation. Both cases now show a user-visible `Notice`. A network/HTTP failure reports the error message; a URL that returns non-iCal content (e.g. an HTML page) tells the user to check they are using the iCal export link, not a web address.
+
+### Added
+
+- **"Test URL" button per calendar in settings**  
+  Each calendar row in settings now has a wifi icon button that fetches the configured URL and reports inline whether it is a valid iCal feed and how many event blocks it contains, or explains why it failed. This makes it easy to validate a Google Calendar secret address or any other ICS URL before saving.
+
+---
+
 ## [0.8.5] — Bug Fixes & Improvements
 
 Released: 2026-09-24
