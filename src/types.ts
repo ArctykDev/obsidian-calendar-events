@@ -53,7 +53,6 @@ export interface CalendarEvent {
   end: string;
   location?: string;
   isRecurring?: boolean;
-  raw?: any;
 
   // Added for multi-calendar support
   calendarId?: string;

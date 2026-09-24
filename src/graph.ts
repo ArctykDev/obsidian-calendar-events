@@ -249,7 +249,6 @@ function parseICS(
         end: endISO || startISO,
         location,
         isRecurring: true,
-        raw: block,
       };
 
       if (!overrideInstances[uid]) overrideInstances[uid] = {};
@@ -266,7 +265,6 @@ function parseICS(
         end: endISO || startISO,
         isRecurring: false,
         location,
-        raw: block,
       });
     }
   }
@@ -361,7 +359,6 @@ function parseICS(
         end: endDateISO,
         location: m.location,
         isRecurring: true,
-        raw: m,
       });
     }
   }
@@ -405,17 +402,8 @@ export class CalendarClient {
       endBoundary.setDate(endBoundary.getDate() + daysAhead);
       endBoundary.setHours(23, 59, 59, 999);
 
-      // Add buffer hours to include early/late events near boundaries
-      const bufferHours = 12;
-      const startISO = new Date(
-        startBoundary.getTime() - bufferHours * 3600 * 1000
-      ).toISOString();
-      const endISO = new Date(
-        endBoundary.getTime() + bufferHours * 3600 * 1000
-      ).toISOString();
-
-      const startBoundaryUTC = new Date(startISO).getTime();
-      const endBoundaryUTC = new Date(endISO).getTime();
+      const startBoundaryUTC = startBoundary.getTime();
+      const endBoundaryUTC = endBoundary.getTime();
 
       // ---- Fetch and parse all calendars ----
       const allResults = await Promise.all(

@@ -2,6 +2,30 @@
 
 All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
+## [0.8.4] — Bug Fixes
+
+Released: 2026-09-24
+
+### Fixed
+
+- **"Days after today" setting could not be set to 0**  
+  `parseInt(value) || 7` treated `0` as falsy and silently reverted to `7`. Now uses `parseInt(value, 10)` with an explicit `isNaN` guard so `0` is accepted as a valid value. Same pattern applied to "Days before today" for consistency.
+- **Stale closure in calendar visibility toggle buttons**  
+  Each toggle button captured `isVisible` at render time. Clicking a button set the visibility to `!capturedValue` rather than toggling the live current value. The handler now reads `this.visibleCalendars[cal.id]` at click time.
+
+- **`raw` field on `CalendarEvent` stored full ICS block strings unnecessarily**  
+  Every parsed event held a reference to its raw ICS text (non-recurring) or master object (recurring). This was never used in the UI and created significant memory overhead for large calendars. Removed from the `CalendarEvent` type and all three construction sites in the parser.
+
+- **Race condition between `saveSettings()` and `render()` in `setEvents()`**  
+  `saveSettings()` was called without `await`, meaning `render()` could execute before the settings write completed. If a visibility toggle or refresh triggered a second save before the first finished, write order was undefined. `setEvents()` is now `async` and all call sites `await` it.
+
+- **Events from the previous day appearing when \"Days before today\" is 0**  
+  A 12-hour buffer was subtracted from `startBoundary` before filtering events, extending the visible window 12 hours into the previous day. `parseICS` already receives the correct un-buffered boundaries so the buffer served no purpose there. Removed; the filter now uses `startBoundary` and `endBoundary` directly.
+- **"Insert Today's Events" command used UTC date instead of local date**  
+  Today's events were filtered by comparing UTC ISO strings with `new Date().toISOString().slice(0, 10)`. Users west of UTC would miss late-evening events (already next day in UTC), and users east of UTC would see next-day events. Now compares the event's local date against the user's local today. Event times in the inserted Markdown are also formatted using the local clock via `Intl.DateTimeFormat`.
+
+---
+
 ## [0.8.3] — Recurring Event DST Fix & Timezone Map Expansion
 
 Released: 2026-03-23
