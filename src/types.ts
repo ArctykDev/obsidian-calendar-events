@@ -52,6 +52,7 @@ export interface CalendarEvent {
   start: string;
   end: string;
   location?: string;
+  isAllDay?: boolean;
   isRecurring?: boolean;
 
   // Added for multi-calendar support

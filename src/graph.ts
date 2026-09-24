@@ -156,8 +156,6 @@ function parseICS(
   const unfolded = icsText.replace(/\r?\n[ \t]/g, "");
   const blocks = unfolded.split("BEGIN:VEVENT").slice(1);
 
-  console.log(`[OCE] Parsing ${blocks.length} VEVENT blocks`);
-
   const recurringMasters: Record<string, any> = {};
   const cancelledInstances: Record<string, string[]> = {};
   const overrideInstances: Record<string, Record<string, CalendarEvent>> = {};
@@ -206,6 +204,8 @@ function parseICS(
 
     const startISO = toISO(start, startTz || undefined);
     const endISO = toISO(end, endTz || undefined);
+    // DATE-only values (no T) indicate all-day events
+    const isAllDay = !!start && !start.includes("T");
 
     if (!uid || !startISO) {
       console.warn(`[OCE] Skipping event - uid: ${!!uid}, startISO: ${!!startISO}, start: ${start}`);
@@ -225,6 +225,7 @@ function parseICS(
         startTz,
         endRaw: end,
         endTz,
+        isAllDay,
       };
       continue;
     }
@@ -248,6 +249,7 @@ function parseICS(
         start: startISO,
         end: endISO || startISO,
         location,
+        isAllDay,
         isRecurring: true,
       };
 
@@ -263,6 +265,7 @@ function parseICS(
         subject: summary,
         start: startISO,
         end: endISO || startISO,
+        isAllDay,
         isRecurring: false,
         location,
       });
@@ -358,12 +361,13 @@ function parseICS(
         start: startDateISO,
         end: endDateISO,
         location: m.location,
+        isAllDay: m.isAllDay,
         isRecurring: true,
       });
     }
   }
 
-  return events.sort((a, b) => a.start.localeCompare(b.start));
+  return events;
 }
 
 /**
@@ -425,8 +429,6 @@ export class CalendarClient {
             }
 
             const rawEvents = parseICS(icsText, startBoundary, endBoundary);
-            console.log(`[OCE] Parsed ${rawEvents.length} events from ${src.name}`);
-
             return rawEvents.map((e) => ({
               ...e,
               calendarId: src.id,
@@ -447,11 +449,8 @@ export class CalendarClient {
         const start = new Date(ev.start);
         let end = new Date(ev.end || ev.start);
 
-        // Detect possible all-day (midnight-to-midnight) events
-        const isAllDay = /^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/.test(ev.start);
-
         // RFC 5545: DTEND for all-day events is exclusive → subtract one day
-        if (isAllDay && end.getTime() > start.getTime()) {
+        if (ev.isAllDay && end.getTime() > start.getTime()) {
           end = new Date(end.getTime() - 24 * 3600 * 1000);
         }
 
@@ -467,8 +466,6 @@ export class CalendarClient {
         return include;
       });
 
-      console.log("[OCE] Filtered events:", filtered.length);
-      // Sort by start time
       return filtered.sort((a, b) => a.start.localeCompare(b.start));
     } catch (error: any) {
       console.error("Error fetching or parsing iCal feeds:", error);
