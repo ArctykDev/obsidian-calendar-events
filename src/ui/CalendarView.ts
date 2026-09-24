@@ -35,7 +35,7 @@ export class CalendarView extends ItemView {
     return "calendar-range";
   }
 
-  setEvents(events: CalendarEvent[] | null | undefined) {
+  async setEvents(events: CalendarEvent[] | null | undefined) {
     this.events = Array.isArray(events) ? events : [];
     this.lastUpdated = new Date();
 
@@ -52,7 +52,7 @@ export class CalendarView extends ItemView {
     }
 
     this.plugin.settings.visibleCalendars = this.visibleCalendars;
-    this.plugin.saveSettings();
+    await this.plugin.saveSettings();
 
     this.render();
   }
@@ -122,11 +122,11 @@ export class CalendarView extends ItemView {
         toggle.style.color = isVisible ? "#fff" : "var(--text-muted)";
 
         toggle.onclick = async () => {
-          // Toggle visibility and persist immediately
-          this.visibleCalendars[cal.id] = !isVisible;
+          // Read current state at click time, not captured creation-time value
+          this.visibleCalendars[cal.id] = !(this.visibleCalendars[cal.id] ?? true);
           this.plugin.settings.visibleCalendars = this.visibleCalendars;
           await this.plugin.saveSettings();
-          this.render(); // Re-render the view with updated visibility
+          this.render();
         };
       }
     }
@@ -156,7 +156,7 @@ export class CalendarView extends ItemView {
 
         new Notice(`Sort order set to ${newOrder.toUpperCase()}.`);
         const events = await this.plugin.calendar.fetchEvents();
-        this.setEvents(events);
+        await this.setEvents(events);
       } catch (err) {
         console.error("Error toggling sort:", err);
         new Notice("Error updating sort order.");
@@ -179,7 +179,7 @@ export class CalendarView extends ItemView {
           this.plugin.settings.calendars?.filter((c) => c.enabled) ?? [];
 
         if (enabledCalendars.length === 0) {
-          this.setEvents([]);
+          await this.setEvents([]);
           new Notice("No enabled calendars. Open settings to add one.");
           return;
         }
@@ -188,12 +188,12 @@ export class CalendarView extends ItemView {
         new Notice("Refreshing calendar...");
 
         const events = await this.plugin.calendar.fetchEvents();
-        this.setEvents(events);
+        await this.setEvents(events);
         new Notice("Calendar refreshed.");
       } catch (err) {
         console.error("Error refreshing calendar:", err);
         new Notice("Error refreshing events.");
-        this.setEvents([]);
+        await this.setEvents([]);
       }
     });
 

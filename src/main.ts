@@ -66,16 +66,21 @@ export default class ObsidianCalendarPlugin extends Plugin {
           }
 
           const events = await this.calendar.fetchEvents();
-          const today = new Date().toISOString().slice(0, 10);
-          const todaysEvents = events.filter((e) =>
-            e.start.startsWith(today)
-          );
+          // Use local date to match events by the user's clock, not UTC
+          const today = new Date();
+          const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+          const todaysEvents = events.filter((e) => {
+            const localDate = new Date(e.start);
+            const key = `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, "0")}-${String(localDate.getDate()).padStart(2, "0")}`;
+            return key === todayKey;
+          });
 
+          const fmt = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
           const md = [
-            `### Events for ${today}`,
+            `### Events for ${todayKey}`,
             ...todaysEvents.map(
               (e) =>
-                `- **${e.subject}** (${e.start} → ${e.end})${e.location ? ` — _${e.location}_` : ""
+                `- **${e.subject}** (${fmt.format(new Date(e.start))} → ${fmt.format(new Date(e.end))})${e.location ? ` — _${e.location}_` : ""
                 }${e.calendarName ? ` — *${e.calendarName}*` : ""}`
             ),
           ].join("\n");
@@ -152,7 +157,7 @@ export default class ObsidianCalendarPlugin extends Plugin {
 
       if (enabledCalendars.length === 0) {
         console.log("[OCE] No calendars configured — showing setup state.");
-        view.setEvents([]);
+        await view.setEvents([]);
         new Notice(
           "No calendars configured. Open plugin settings to add one or more calendars."
         );
@@ -161,10 +166,10 @@ export default class ObsidianCalendarPlugin extends Plugin {
 
       try {
         const events = await this.calendar.fetchEvents();
-        view.setEvents(events);
+        await view.setEvents(events);
       } catch (err) {
         console.warn("[OCE] Startup fetch failed:", err);
-        view.setEvents([]);
+        await view.setEvents([]);
         new Notice(
           "Unable to load calendar events. Check your calendar URLs or network connection."
         );
@@ -229,7 +234,7 @@ export default class ObsidianCalendarPlugin extends Plugin {
     if (!leaf) leaf = await this.activateView();
 
     const view = leaf.view as CalendarView;
-    view.setEvents(events);
+    await view.setEvents(events);
   }
 
   // -----------------------------

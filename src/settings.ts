@@ -137,8 +137,8 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
           .setPlaceholder("0")
           .setValue(this.settings.daysBefore.toString())
           .onChange(async (value) => {
-            const parsed = parseInt(value) || 0;
-            this.settings.daysBefore = Math.max(parsed, 0);
+            const parsed = parseInt(value, 10);
+            this.settings.daysBefore = Math.max(isNaN(parsed) ? 0 : parsed, 0);
             await this.save();
           })
       );
@@ -152,8 +152,8 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
           .setPlaceholder("7")
           .setValue(this.settings.daysAhead.toString())
           .onChange(async (value) => {
-            const parsed = parseInt(value) || 7;
-            this.settings.daysAhead = Math.max(parsed, 0);
+            const parsed = parseInt(value, 10);
+            this.settings.daysAhead = Math.max(isNaN(parsed) ? 7 : parsed, 0);
             await this.save();
           })
       );
