@@ -2,6 +2,45 @@
 
 All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
+## [0.9.0] — Obsidian Plugin Submission Prep
+
+Released: 2026-09-25
+
+This release addresses all items flagged during an internal audit against the official Obsidian plugin guidelines in preparation for community directory submission.
+
+### Fixed
+
+- **`detachLeavesOfType` removed from `onunload()`**  
+  The Obsidian plugin guidelines explicitly prohibit this. When the plugin was unloaded, it was forcibly closing the calendar panel rather than letting Obsidian restore it on reload.
+
+- **`Vault.modify` replaced with `Vault.process` for daily note insertion**  
+  `process` is atomic and prevents write conflicts when other plugins modify the same note concurrently.
+
+- **`window.setInterval` replaced with `this.registerInterval()`**  
+  The "Updated X minutes ago" timer is now registered with Obsidian's component lifecycle and automatically cleaned up on plugin unload.
+
+- **`openSettingsTab` private API made resilient**  
+  The settings opener now uses optional chaining and falls back to a helpful notice if the internal API is unavailable, instead of logging an error to the console.
+
+- **README corrected**  
+  Fixed wrong plugin name ("SharePoint Calendar Events") and placeholder GitHub URL in the developer install section.
+
+### Improved
+
+- **Hardcoded inline styles moved to CSS**  
+  All structural styles in `CalendarView.ts` (toggle bar layout, calendar filter buttons, loading/empty states, calendar dot) are now CSS classes. Only runtime-dynamic values (user-configured calendar colours) remain as inline styles. This allows themes and user snippets to customise the plugin's appearance.
+
+- **Settings header simplified**  
+  The redundant "Calendar Events Settings" `<h2>` heading (discouraged by Obsidian guidelines) is replaced with a version info `Setting` row.
+
+- **Manifest description improved**  
+  More specific and discoverable description for the community marketplace.
+
+- **`FUNDING.yml` added**  
+  GitHub Sponsor button now links to Buy Me a Coffee.
+
+---
+
 ## [0.8.6] — Calendar URL Diagnostics
 
 Released: 2026-09-24

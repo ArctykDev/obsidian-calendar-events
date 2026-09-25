@@ -11,8 +11,6 @@ export default class ObsidianCalendarPlugin extends Plugin {
   private ribbonEl: HTMLElement | null = null;   // <-- NEW
 
   async onload() {
-    console.log("[Obsidian Calendar Events] Loading plugin...");
-
     // Load saved settings (and migrate old single-calendar configs)
     await this.loadSettings();
 
@@ -205,15 +203,11 @@ export default class ObsidianCalendarPlugin extends Plugin {
   // PLUGIN UNLOAD
   // -----------------------------
   onunload() {
-    console.log("[Obsidian Calendar Events] Unloading plugin");
-
     // Clean up ribbon icon
     if (this.ribbonEl) {
       this.ribbonEl.detach();
       this.ribbonEl = null;
     }
-
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE_SPCALENDAR);
   }
 
   // -----------------------------
@@ -244,15 +238,14 @@ export default class ObsidianCalendarPlugin extends Plugin {
   async openSettingsTab(): Promise<void> {
     try {
       const setting = (this.app as any).setting;
-      if (!setting) {
-        new Notice("Settings interface not available yet. Try again in a moment.");
-        return;
+      if (setting?.open && setting?.openTabById) {
+        setting.open();
+        setting.openTabById(this.manifest.id);
+      } else {
+        new Notice("Open Settings → Community Plugins → Calendar Events to configure.");
       }
-      await setting.open();
-      setting.openTabById(this.manifest.id);
-    } catch (err) {
-      console.error("Error opening settings tab:", err);
-      new Notice("Failed to open Obsidian Calendar Events settings.");
+    } catch {
+      new Notice("Open Settings → Community Plugins → Calendar Events to configure.");
     }
   }
 

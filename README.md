@@ -89,13 +89,13 @@ You can easily install this plugin using the BRAT (Beta Reviewers Auto-update Te
    manifest.json
    styles.css (if applicable)
    ```
-4. Reload Obsidian and enable SharePoint Calendar Events from the community plugins list.
+4. Reload Obsidian and enable **Calendar Events** from the community plugins list.
 
 ### Option 3 — Manual (Developer)
 
 1. Clone or download this repository:
    ```bash
-   git clone https://github.com/YOUR-USERNAME/obsidian-calendar-events.git
+   git clone https://github.com/ArctykDev/obsidian-calendar-events.git
    ```
 2. Navigate to the plugin directory:
 

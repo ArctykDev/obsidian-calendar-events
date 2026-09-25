@@ -73,8 +73,6 @@ export class CalendarView extends ItemView {
 
     const wrapper = container.createDiv({ cls: "spcalendar-wrapper" });
     const loadingDiv = wrapper.createDiv({ cls: "spcalendar-loading" });
-    loadingDiv.style.textAlign = "center";
-    loadingDiv.style.padding = "48px";
     loadingDiv.createEl("p", { text: message });
   }
 
@@ -109,26 +107,18 @@ export class CalendarView extends ItemView {
     const enabledCalendars = this.plugin.settings.calendars?.filter((c) => c.enabled) ?? [];
     if (enabledCalendars.length > 1) {
       const toggleBar = wrapper.createDiv({ cls: "spcalendar-togglebar" });
-      toggleBar.style.display = "flex";
-      toggleBar.style.flexWrap = "wrap";
-      toggleBar.style.gap = "8px";
-      toggleBar.style.marginBottom = "10px";
-      toggleBar.style.padding = "4px 0";
-      toggleBar.style.justifyContent = "center";
 
       for (const cal of enabledCalendars) {
         const isVisible = this.visibleCalendars[cal.id] ?? true;
 
-        const toggle = toggleBar.createEl("button", { text: cal.name });
-        toggle.style.border = "1px solid var(--background-modifier-border)";
-        toggle.style.borderRadius = "6px";
-        toggle.style.padding = "4px 10px";
-        toggle.style.cursor = "pointer";
-        toggle.style.transition = "all 0.2s ease";
+        const toggle = toggleBar.createEl("button", {
+          text: cal.name,
+          cls: "spcalendar-cal-toggle",
+        });
         toggle.style.backgroundColor = isVisible
           ? cal.color || "var(--interactive-accent)"
-          : "var(--background-secondary)";
-        toggle.style.color = isVisible ? "#fff" : "var(--text-muted)";
+          : "";
+        toggle.classList.toggle("is-active", isVisible);
 
         toggle.onclick = async () => {
           // Read current state at click time, not captured creation-time value
@@ -313,7 +303,8 @@ export class CalendarView extends ItemView {
         if (this.updateTimer) {
           window.clearInterval(this.updateTimer);
         }
-        this.updateTimer = window.setInterval(updateLabel, 60000);
+        // registerInterval auto-clears on plugin unload; manual clear handles view close
+        this.updateTimer = this.registerInterval(window.setInterval(updateLabel, 60000));
       }
 
     }
@@ -321,17 +312,13 @@ export class CalendarView extends ItemView {
     // EMPTY STATE ---------------------------------------------------
     if (!this.events.length) {
       const empty = wrapper.createDiv({ cls: "spcalendar-empty" });
-      empty.style.textAlign = "center";
-      empty.style.padding = "48px";
 
       if (!calendarsConfigured) {
         empty.createEl("h3", { text: "Welcome to Obsidian Calendar Events!" });
         empty.createEl("p", {
           text: "No calendars are configured. Use the settings icon above to add one or click below to open settings.",
         });
-        const button = empty.createEl("button", { text: "Open Settings" });
-        button.classList.add("mod-cta");
-        button.style.marginTop = "12px";
+        const button = empty.createEl("button", { text: "Open Settings", cls: "mod-cta spcalendar-empty-btn" });
         button.onclick = async () => this.plugin.openSettingsTab();
       } else {
         empty.createEl("p", { text: "No upcoming events." });
@@ -386,8 +373,6 @@ export class CalendarView extends ItemView {
       // Expand/Collapse indicator
       const toggleIcon = headerRow.createSpan({ cls: "spcalendar-collapse-icon" });
       toggleIcon.textContent = this.collapsedDays[day] ? "▶" : "▼";
-      toggleIcon.style.marginLeft = "8px";
-      toggleIcon.style.cursor = "pointer";
 
       // Clickable header area to toggle
       headerRow.addEventListener("click", async () => {
@@ -464,11 +449,8 @@ export class CalendarView extends ItemView {
         // Optional calendar label
         if (e.calendarName) {
           const source = card.createDiv({ cls: "spcalendar-row" });
-          const dot = source.createSpan();
-          dot.style.width = "10px";
-          dot.style.height = "10px";
-          dot.style.borderRadius = "50%";
-          dot.style.backgroundColor = e.color || "#4A90E2";
+          const dot = source.createSpan({ cls: "spcalendar-cal-dot" });
+          dot.style.backgroundColor = e.color || "var(--interactive-accent)";
           source.createSpan({
             text: e.calendarName,
             cls: "spcalendar-calendar-name",
@@ -499,31 +481,30 @@ export class CalendarView extends ItemView {
         return;
       }
 
-      const content = await app.vault.read(dailyNote);
-      const timeStr = event.isAllDay
-        ? "All Day"
-        : `${moment(event.start).format("h:mm A")} - ${moment(event.end).format("h:mm A")}`;
-      const newTask = `- [ ] ${event.subject} (${timeStr})${event.location ? ` - ${event.location}` : ""}`;
+      await app.vault.process(dailyNote, (content) => {
+        const timeStr = event.isAllDay
+          ? "All Day"
+          : `${moment(event.start).format("h:mm A")} - ${moment(event.end).format("h:mm A")}`;
+        const newTask = `- [ ] ${event.subject} (${timeStr})${event.location ? ` - ${event.location}` : ""}`;
 
-      let updated = content.trim();
-      if (this.plugin.settings.addUnderHeading) {
-        const heading = `## ${this.plugin.settings.headingName}`;
-        // Escape special regex characters from user-supplied heading name
-        const safeName = this.plugin.settings.headingName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const headingRegex = new RegExp(`^#{1,6}\\s+${safeName}\\s*$`, "m");
-        if (headingRegex.test(content)) {
-          const lines = content.split("\n");
-          const index = lines.findIndex((line) => headingRegex.test(line));
-          lines.splice(index + 1, 0, "", newTask);
-          updated = lines.join("\n");
+        let updated = content.trim();
+        if (this.plugin.settings.addUnderHeading) {
+          const heading = `## ${this.plugin.settings.headingName}`;
+          const safeName = this.plugin.settings.headingName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const headingRegex = new RegExp(`^#{1,6}\\s+${safeName}\\s*$`, "m");
+          if (headingRegex.test(content)) {
+            const lines = content.split("\n");
+            const index = lines.findIndex((line) => headingRegex.test(line));
+            lines.splice(index + 1, 0, "", newTask);
+            updated = lines.join("\n");
+          } else {
+            updated += `\n\n${heading}\n\n${newTask}`;
+          }
         } else {
-          updated += `\n\n${heading}\n\n${newTask}`;
+          updated += `\n${newTask}`;
         }
-      } else {
-        updated += `\n${newTask}`;
-      }
-
-      await app.vault.modify(dailyNote, updated);
+        return updated;
+      });
       new Notice(`Added to ${dailyNote.basename} as a task.`);
     } catch (err) {
       console.error("Failed to add event to daily note:", err);
