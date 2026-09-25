@@ -166,6 +166,11 @@
   color: var(--text-normal);
 }
 
+.spcalendar-loading {
+  text-align: center;
+  padding: 48px;
+}
+
 .spcalendar-loading p {
   font-size: 1.1em;
   color: var(--text-muted);
@@ -203,6 +208,29 @@
 }
 .spcalendar-sort-indicator.rotated {
   transform: rotate(180deg);
+}
+
+.spcalendar-togglebar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 4px 0;
+  justify-content: center;
+}
+
+.spcalendar-cal-toggle {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: var(--background-secondary);
+  color: var(--text-muted);
+}
+
+.spcalendar-cal-toggle.is-active {
+  color: var(--text-on-accent);
 }
 
 .spcalendar-togglebar button:hover {
@@ -250,6 +278,7 @@
 .spcalendar-collapse-icon {
   width: 24px;
   height: 24px;
+  margin-left: 8px;
 
   display: inline-flex;
   align-items: center;
@@ -273,6 +302,22 @@
 /* Rotated icon when collapsed (already in your logic, preserved) */
 .spcalendar-collapse-icon.rotated {
   transform: rotate(180deg);
+}
+
+.spcalendar-cal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.spcalendar-empty {
+  text-align: center;
+  padding: 48px;
+}
+
+.spcalendar-empty-btn {
+  margin-top: 12px;
 }
 
 /* Event count badge */
