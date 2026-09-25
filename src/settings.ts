@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, Notice, PluginSettingTab, Setting, requestUrl } from "obsidian";
 import ObsidianCalendarPlugin from "./main";
 import type { ObsidianCalendarSettings } from "./types";
 
@@ -103,6 +103,28 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
             cal.enabled = v;
             await this.save();
           })
+        )
+        .addExtraButton((btn) =>
+          btn
+            .setIcon("wifi")
+            .setTooltip("Test URL")
+            .onClick(async () => {
+              const url = cal.url.trim();
+              if (!url) { new Notice("No URL entered."); return; }
+              new Notice(`Testing "${cal.name}"...`, 2000);
+              try {
+                const response = await requestUrl({ url });
+                const text = response.text || "";
+                if (text.includes("BEGIN:VEVENT")) {
+                  const count = (text.match(/BEGIN:VEVENT/g) || []).length;
+                  new Notice(`✓ "${cal.name}" is a valid iCal feed (${count} event block${count !== 1 ? "s" : ""} found).`);
+                } else {
+                  new Notice(`✗ "${cal.name}": URL did not return an iCal feed. Ensure it ends in .ics or contains "ical" in the path.`);
+                }
+              } catch (err: any) {
+                new Notice(`✗ "${cal.name}" failed: ${err?.message || "Network error"}. Check the URL and your connection.`);
+              }
+            })
         )
         .addExtraButton((btn) =>
           btn

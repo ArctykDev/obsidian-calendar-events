@@ -1,7 +1,16 @@
-import { requestUrl } from "obsidian";
+import { Notice, requestUrl } from "obsidian";
 import { rrulestr } from "rrule";
 import type { CalendarEvent, CalendarSource, ObsidianCalendarSettings } from "./types";
 import { normalizeTZID } from "./utils/tzidMap";
+
+/** Unescape RFC 5545 TEXT escape sequences: \, \; \n \N \\ */
+function unescapeText(text: string): string {
+  return text
+    .replace(/\\,/g, ",")
+    .replace(/\\;/g, ";")
+    .replace(/\\[nN]/g, "\n")
+    .replace(/\\\\/g, "\\");
+}
 
 /**
  * Parses property lines like:
@@ -182,9 +191,9 @@ function parseICS(
     for (const line of lines) {
       if (line.startsWith("UID:")) uid = line.substring(4).trim();
       else if (line.startsWith("SUMMARY"))
-        summary = line.split(":").slice(1).join(":").trim();
+        summary = unescapeText(line.split(":").slice(1).join(":").trim());
       else if (line.startsWith("LOCATION"))
-        location = line.split(":").slice(1).join(":").trim();
+        location = unescapeText(line.split(":").slice(1).join(":").trim());
       else if (line.startsWith("STATUS:CANCELLED")) canceled = true;
       else if (line.startsWith("DTSTART")) {
         const { value, tz } = readProp(line);
@@ -425,6 +434,7 @@ export class CalendarClient {
 
             if (!icsText.includes("BEGIN:VEVENT")) {
               console.warn(`[OCE] No VEVENT blocks found in calendar: ${src.name}`);
+              new Notice(`Calendar "${src.name}": No events found. Make sure the URL is an iCal (.ics) export link, not a web address.`);
               return [] as CalendarEvent[];
             }
 
@@ -437,6 +447,7 @@ export class CalendarClient {
             })) as CalendarEvent[];
           } catch (err) {
             console.error(`[OCE] Failed to fetch calendar "${src.name}":`, err);
+            new Notice(`Failed to load "${src.name}": ${(err as any)?.message || "Network error"}. Check the URL and your connection.`);
             return [] as CalendarEvent[];
           }
         })
