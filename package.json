@@ -1,5 +1,5 @@
 {
-  "name": "obsidian-calendar-events",
+  "name": "ical-calendar-events",
   "version": "1.0.3",
   "type": "module",
   "description": "Display and mange iCal (.ics) calendar events directly inside Obsidian.",
