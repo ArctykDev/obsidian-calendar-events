@@ -97,9 +97,7 @@
   border-bottom: 1px solid var(--background-modifier-border);
   padding: 10px 12px;
   height: 64px;
-  margin-bottom: 0.5em;
-  position: sticky;
-  top: 0;
+  margin-bottom: 0;
   z-index: 20;
 
   /* Polished translucent background with blur */
@@ -311,12 +309,10 @@
 }
 
 .spcalendar-search-row {
-  position: sticky;
-  top: 64px;
-  z-index: 19;
   background: var(--background-primary);
-  padding: 6px 0 8px;
+  padding: 6px 12px 8px;
   border-bottom: 1px solid var(--background-modifier-border);
+  flex-shrink: 0;
 }
 
 .spcalendar-search {

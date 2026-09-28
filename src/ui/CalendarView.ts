@@ -73,7 +73,8 @@ export class CalendarView extends ItemView {
     container.empty();
 
     const wrapper = container.createDiv({ cls: "spcalendar-wrapper" });
-    const loadingDiv = wrapper.createDiv({ cls: "spcalendar-loading" });
+    const content = wrapper.createDiv({ cls: "spcalendar-content" });
+    const loadingDiv = content.createDiv({ cls: "spcalendar-loading" });
     loadingDiv.createEl("p", { text: message });
   }
 
@@ -110,37 +111,9 @@ export class CalendarView extends ItemView {
 
     const wrapper = container.createDiv({ cls: "spcalendar-wrapper" });
 
-    // HEADER BAR ---------------------------------------------------
+    // HEADER BAR (non-scrolling) -----------------------------------
     const header = wrapper.createDiv({ cls: "spcalendar-header" });
-
-    // Calendar visibility toggles
     const enabledCalendars = this.plugin.settings.calendars?.filter((c) => c.enabled) ?? [];
-    if (enabledCalendars.length > 1) {
-      const toggleBar = wrapper.createDiv({ cls: "spcalendar-togglebar" });
-
-      for (const cal of enabledCalendars) {
-        const isVisible = this.visibleCalendars[cal.id] ?? true;
-
-        const toggle = toggleBar.createEl("button", {
-          text: cal.name,
-          cls: "spcalendar-cal-toggle",
-        });
-        toggle.style.backgroundColor = isVisible
-          ? cal.color || "var(--interactive-accent)"
-          : "";
-        toggle.classList.toggle("is-active", isVisible);
-
-        toggle.onclick = async () => {
-          // Read current state at click time, not captured creation-time value
-          this.visibleCalendars[cal.id] = !(this.visibleCalendars[cal.id] ?? true);
-          this.plugin.settings.visibleCalendars = this.visibleCalendars;
-          await this.plugin.saveSettings();
-          this.render();
-        };
-      }
-    }
-
-
 
     // Left: Title + Sort
     const leftSection = header.createDiv({ cls: "spcalendar-header-left" });
@@ -262,7 +235,7 @@ export class CalendarView extends ItemView {
     settingsBtn.setAttr("title", "Open Calendar Settings");
     settingsBtn.addEventListener("click", () => this.plugin.openSettingsTab());
 
-    // SEARCH ROW ---------------------------------------------------
+    // SEARCH ROW (non-scrolling) ------------------------------------
     const searchRow = wrapper.createDiv({ cls: "spcalendar-search-row" });
     const searchInput = searchRow.createEl("input", {
       cls: "spcalendar-search",
@@ -274,12 +247,40 @@ export class CalendarView extends ItemView {
       this.render();
     });
 
+    // SCROLLABLE CONTENT AREA ---------------------------------------
+    const content = wrapper.createDiv({ cls: "spcalendar-content" });
+
+    // Calendar visibility toggles
+    if (enabledCalendars.length > 1) {
+      const toggleBar = content.createDiv({ cls: "spcalendar-togglebar" });
+
+      for (const cal of enabledCalendars) {
+        const isVisible = this.visibleCalendars[cal.id] ?? true;
+
+        const toggle = toggleBar.createEl("button", {
+          text: cal.name,
+          cls: "spcalendar-cal-toggle",
+        });
+        toggle.style.backgroundColor = isVisible
+          ? cal.color || "var(--interactive-accent)"
+          : "";
+        toggle.classList.toggle("is-active", isVisible);
+
+        toggle.onclick = async () => {
+          this.visibleCalendars[cal.id] = !(this.visibleCalendars[cal.id] ?? true);
+          this.plugin.settings.visibleCalendars = this.visibleCalendars;
+          await this.plugin.saveSettings();
+          this.render();
+        };
+      }
+    }
+
     // RANGE LABEL ---------------------------------------------------
     const calendarsConfigured =
       this.plugin.settings.calendars?.filter((c) => c.enabled).length > 0;
 
     if (calendarsConfigured) {
-      const rangeContainer = wrapper.createDiv({ cls: "spcalendar-range" });
+      const rangeContainer = content.createDiv({ cls: "spcalendar-range" });
       const { daysBefore = 0, daysAhead = 7 } = this.plugin.settings;
       const start = new Date();
       start.setDate(start.getDate() - daysBefore);
@@ -296,7 +297,7 @@ export class CalendarView extends ItemView {
       );
 
       if (this.lastUpdated) {
-        const updatedDiv = wrapper.createDiv({ cls: "spcalendar-updated" });
+        const updatedDiv = content.createDiv({ cls: "spcalendar-updated" });
         const updateLabel = () => {
           const now = new Date();
           const diffMs = now.getTime() - this.lastUpdated!.getTime();
@@ -333,7 +334,7 @@ export class CalendarView extends ItemView {
 
     // EMPTY STATE ---------------------------------------------------
     if (!this.events.length) {
-      const empty = wrapper.createDiv({ cls: "spcalendar-empty" });
+      const empty = content.createDiv({ cls: "spcalendar-empty" });
 
       if (!calendarsConfigured) {
         empty.createEl("h3", { text: "Welcome to Obsidian Calendar Events!" });
@@ -374,7 +375,7 @@ export class CalendarView extends ItemView {
       );
 
       const isToday = day === todayKey;
-      const dayContainer = wrapper.createDiv({
+      const dayContainer = content.createDiv({
         cls: `spcalendar-day${isToday ? " spcalendar-today" : ""}`,
       });
 
