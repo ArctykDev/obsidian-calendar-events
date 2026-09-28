@@ -2,6 +2,22 @@
 
 All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
+## [1.0.1] — Display Settings & Search Layout
+
+Released: 2026-09-28
+
+### Added
+
+- **Event card display settings**  
+  A new "Event card display" section in settings lets you individually show or hide location, description, meeting URL, and calendar name on event cards. All fields remain visible by default.
+
+### Improved
+
+- **Search bar moved to its own row**  
+  The search input has been moved from the header button row into a dedicated sticky row directly below the header, decluttering the toolbar and giving the search field full-width space.
+
+---
+
 ## [1.0.0] — Feature Update
 
 Released: 2026-09-28
