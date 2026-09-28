@@ -11,6 +11,10 @@ export const DEFAULT_SETTINGS: ObsidianCalendarSettings = {
   addUnderHeading: false,
   headingName: "Calendar Events",
   autoRefreshInterval: 0,
+  showLocation: true,
+  showDescription: true,
+  showUrl: true,
+  showCalendarName: true,
   showRibbonIcon: true,
   visibleCalendars: {},
   collapsedDays: {},
@@ -257,6 +261,38 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
       )
       .descEl.createSpan({ text: " minutes", cls: "setting-item-description" });
 
+    containerEl.createEl("hr");
+    new Setting(containerEl).setName("Event card display").setHeading();
+
+    new Setting(containerEl)
+      .setName("Show location")
+      .setDesc("Display the event location on each card.")
+      .addToggle((t) => t.setValue(this.settings.showLocation).onChange(async (v) => {
+        this.settings.showLocation = v; await this.save();
+      }));
+
+    new Setting(containerEl)
+      .setName("Show description")
+      .setDesc("Display the event description (up to 3 lines) on each card.")
+      .addToggle((t) => t.setValue(this.settings.showDescription).onChange(async (v) => {
+        this.settings.showDescription = v; await this.save();
+      }));
+
+    new Setting(containerEl)
+      .setName("Show meeting link")
+      .setDesc("Display a clickable URL when the event has one (e.g. Zoom, Teams, Meet).")
+      .addToggle((t) => t.setValue(this.settings.showUrl).onChange(async (v) => {
+        this.settings.showUrl = v; await this.save();
+      }));
+
+    new Setting(containerEl)
+      .setName("Show calendar name")
+      .setDesc("Display the source calendar name at the bottom of each card.")
+      .addToggle((t) => t.setValue(this.settings.showCalendarName).onChange(async (v) => {
+        this.settings.showCalendarName = v; await this.save();
+      }));
+
+    containerEl.createEl("hr");
     new Setting(containerEl)
       .setName("Show ribbon icon")
       .setDesc("Adds a calendar icon to the Obsidian ribbon for quick access.")

@@ -310,15 +310,29 @@
   margin-top: 12px;
 }
 
+.spcalendar-search-row {
+  position: sticky;
+  top: 64px;
+  z-index: 19;
+  background: var(--background-primary);
+  padding: 6px 0 8px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
 .spcalendar-search {
-  flex: 1;
-  margin: 0 8px;
-  padding: 4px 8px;
+  width: 100%;
+  padding: 5px 10px;
   border: 1px solid var(--background-modifier-border);
   border-radius: 4px;
   background: var(--background-primary);
   color: var(--text-normal);
   font-size: 0.85em;
+  box-sizing: border-box;
+}
+
+.spcalendar-search:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
 }
 
 .spcalendar-event-url {

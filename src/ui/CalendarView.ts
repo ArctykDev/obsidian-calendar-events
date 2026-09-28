@@ -175,17 +175,6 @@ export class CalendarView extends ItemView {
     // Right: Refresh + Settings
     const rightSection = header.createDiv({ cls: "spcalendar-header-right" });
 
-    // Search input
-    const searchInput = header.createEl("input", {
-      cls: "spcalendar-search",
-      attr: { type: "text", placeholder: "Search events…", "aria-label": "Search events" },
-    });
-    searchInput.value = this.searchQuery;
-    searchInput.addEventListener("input", () => {
-      this.searchQuery = searchInput.value;
-      this.render();
-    });
-
     const refreshBtn = rightSection.createEl("button", {
       cls: "spcalendar-refresh-btn",
       attr: { "aria-label": "Refresh Calendar Events" },
@@ -272,6 +261,18 @@ export class CalendarView extends ItemView {
     setIcon(settingsBtn, "settings");
     settingsBtn.setAttr("title", "Open Calendar Settings");
     settingsBtn.addEventListener("click", () => this.plugin.openSettingsTab());
+
+    // SEARCH ROW ---------------------------------------------------
+    const searchRow = wrapper.createDiv({ cls: "spcalendar-search-row" });
+    const searchInput = searchRow.createEl("input", {
+      cls: "spcalendar-search",
+      attr: { type: "text", placeholder: "Search events…", "aria-label": "Search events" },
+    });
+    searchInput.value = this.searchQuery;
+    searchInput.addEventListener("input", () => {
+      this.searchQuery = searchInput.value;
+      this.render();
+    });
 
     // RANGE LABEL ---------------------------------------------------
     const calendarsConfigured =
@@ -443,7 +444,7 @@ export class CalendarView extends ItemView {
           cls: "spcalendar-time-text",
         });
 
-        if (e.location) {
+        if (e.location && this.plugin.settings.showLocation) {
           const locRow = card.createDiv({ cls: "spcalendar-row" });
           const locIcon = locRow.createSpan({ cls: "spcalendar-icon" });
           setIcon(locIcon, "map-pin");
@@ -453,7 +454,7 @@ export class CalendarView extends ItemView {
           });
         }
 
-        if (e.url) {
+        if (e.url && this.plugin.settings.showUrl) {
           const urlRow = card.createDiv({ cls: "spcalendar-row" });
           const urlIcon = urlRow.createSpan({ cls: "spcalendar-icon" });
           setIcon(urlIcon, "link");
@@ -465,7 +466,7 @@ export class CalendarView extends ItemView {
           });
         }
 
-        if (e.description) {
+        if (e.description && this.plugin.settings.showDescription) {
           const descEl = card.createDiv({ cls: "spcalendar-description" });
           descEl.setText(e.description);
         }
@@ -486,7 +487,7 @@ export class CalendarView extends ItemView {
         });
 
         // Optional calendar label
-        if (e.calendarName) {
+        if (e.calendarName && this.plugin.settings.showCalendarName) {
           const source = card.createDiv({ cls: "spcalendar-row" });
           const dot = source.createSpan({ cls: "spcalendar-cal-dot" });
           dot.style.backgroundColor = e.color || "var(--interactive-accent)";
