@@ -2,6 +2,17 @@
 
 All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
+## [1.0.3] — CSS Layout Fix
+
+Released: 2026-09-28
+
+### Fixed
+
+- **Header missing and events not scrollable after 1.0.2**  
+  A previous CSS replacement wrote `\n` as literal characters instead of newlines, corrupting the `.spcalendar-wrapper` selector. This made the entire rule unparseable — the wrapper had no flex layout, no height, and no overflow — causing the header to be invisible and the event list to not scroll. The wrapper, content, and header CSS have been fully rewritten cleanly.
+
+---
+
 ## [1.0.2] — Scroll Fix
 
 Released: 2026-09-28
