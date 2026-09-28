@@ -2,6 +2,17 @@
 
 All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
+## [1.0.2] — Scroll Fix
+
+Released: 2026-09-28
+
+### Fixed
+
+- **Event list no longer scrollable after 1.0.1**  
+  The `position: sticky` header inside an `overflow-y: auto` flex container is a known Chromium/Electron issue that collapses the scroll container entirely. The layout has been restructured: the header and search row are now `flex-shrink: 0` elements above a dedicated `spcalendar-content` scroll area, which is the sole scroll container. The header no longer needs `sticky` or `fixed` positioning since it always sits above the scroll region.
+
+---
+
 ## [1.0.1] — Display Settings & Search Layout
 
 Released: 2026-09-28
