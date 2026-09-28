@@ -49,15 +49,7 @@
 /* CALENDAR VIEW                                                             */
 /* ========================================================================= */
 
-/* Main wrapper */
-.spcalendar-wrapper {
-  /* Fix: padding-top must be first and not overridden */
-  padding-top: 80px; /* equal to header height + small margin */
-  padding-right: 18px;
-  padding-left: 18px;
-  padding-bottom: 24px;
-
-  display: flex;
+/* Main wrapper */\n.spcalendar-wrapper {\n  padding: 0 18px 24px;\n\n  display: flex;
   flex-direction: column;
   overflow-y: auto;
   height: 100%;
@@ -104,12 +96,10 @@
   color: var(--text-normal);
   border-bottom: 1px solid var(--background-modifier-border);
   padding: 10px 12px;
-  height: 64px; /* ensures consistent spacing */
+  height: 64px;
   margin-bottom: 0.5em;
-  position: fixed; /* changed from sticky */
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
   z-index: 20;
 
   /* Polished translucent background with blur */
@@ -318,6 +308,36 @@
 
 .spcalendar-empty-btn {
   margin-top: 12px;
+}
+
+.spcalendar-search {
+  flex: 1;
+  margin: 0 8px;
+  padding: 4px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 0.85em;
+}
+
+.spcalendar-event-url {
+  font-size: 0.85em;
+  color: var(--link-color);
+  text-decoration: underline;
+}
+
+.spcalendar-description {
+  font-size: 0.82em;
+  color: var(--text-muted);
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--background-modifier-border);
+  white-space: pre-wrap;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
 }
 
 /* Event count badge */

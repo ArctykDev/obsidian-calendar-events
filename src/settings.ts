@@ -3,14 +3,14 @@ import ObsidianCalendarPlugin from "./main";
 import type { ObsidianCalendarSettings } from "./types";
 
 export const DEFAULT_SETTINGS: ObsidianCalendarSettings = {
-  calendars: [], // default empty array
+  calendars: [],
   daysBefore: 0,
   daysAhead: 7,
   sortOrder: "asc",
   pinToday: true,
   addUnderHeading: false,
   headingName: "Calendar Events",
-  firstRun: true,
+  autoRefreshInterval: 0,
   showRibbonIcon: true,
   visibleCalendars: {},
   collapsedDays: {},
@@ -49,7 +49,7 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
     // Version info row at the top
     const versionSetting = new Setting(containerEl)
       .setName(`v${this.plugin.manifest.version}`)
-      .setDesc("Calendar Events — iCal feed viewer for Obsidian");
+      .setDesc("Calendar Events — iCal feed viewer for Obsidian ");
 
     versionSetting.descEl.createEl("a", {
       text: "View changelog",
@@ -240,6 +240,22 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
             })
         );
     }
+
+    new Setting(containerEl)
+      .setName("Auto-refresh interval")
+      .setDesc("Automatically refresh events in the background. Set to 0 to disable.")
+      .addText((text) =>
+        text
+          .setPlaceholder("0")
+          .setValue(this.settings.autoRefreshInterval.toString())
+          .onChange((value) => {
+            const parsed = parseInt(value, 10);
+            this.settings.autoRefreshInterval = Math.max(isNaN(parsed) ? 0 : parsed, 0);
+            this.debouncedSave();
+            this.plugin.scheduleAutoRefresh();
+          })
+      )
+      .descEl.createSpan({ text: " minutes", cls: "setting-item-description" });
 
     new Setting(containerEl)
       .setName("Show ribbon icon")

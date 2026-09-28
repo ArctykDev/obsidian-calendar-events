@@ -18,6 +18,7 @@ export class CalendarView extends ItemView {
   private updateTimer: number | null = null;
   private scrollTimer: number | null = null;
   private collapsedDays: Record<string, boolean> = {};
+  private searchQuery = "";
 
   constructor(leaf: WorkspaceLeaf, plugin: ObsidianCalendarPlugin) {
     super(leaf);
@@ -91,6 +92,15 @@ export class CalendarView extends ItemView {
     for (const ev of this.events) {
       if (ev.calendarId && this.visibleCalendars[ev.calendarId] === false) continue;
       if (!ev?.start) continue;
+      // Apply search filter
+      if (this.searchQuery) {
+        const q = this.searchQuery.toLowerCase();
+        const matches =
+          ev.subject?.toLowerCase().includes(q) ||
+          ev.location?.toLowerCase().includes(q) ||
+          ev.description?.toLowerCase().includes(q);
+        if (!matches) continue;
+      }
       const day = moment(ev.start).isValid()
         ? moment(ev.start).format("YYYY-MM-DD")
         : "unknown";
@@ -164,6 +174,17 @@ export class CalendarView extends ItemView {
 
     // Right: Refresh + Settings
     const rightSection = header.createDiv({ cls: "spcalendar-header-right" });
+
+    // Search input
+    const searchInput = header.createEl("input", {
+      cls: "spcalendar-search",
+      attr: { type: "text", placeholder: "Search events…", "aria-label": "Search events" },
+    });
+    searchInput.value = this.searchQuery;
+    searchInput.addEventListener("input", () => {
+      this.searchQuery = searchInput.value;
+      this.render();
+    });
 
     const refreshBtn = rightSection.createEl("button", {
       cls: "spcalendar-refresh-btn",
@@ -403,6 +424,7 @@ export class CalendarView extends ItemView {
         titleRow.createSpan({
           text: e.subject || "(no title)",
           cls: "spcalendar-event-title",
+          attr: { title: e.subject || "(no title)" },
         });
 
         // Recurring indicator
@@ -429,6 +451,23 @@ export class CalendarView extends ItemView {
             text: e.location,
             cls: "spcalendar-location-text",
           });
+        }
+
+        if (e.url) {
+          const urlRow = card.createDiv({ cls: "spcalendar-row" });
+          const urlIcon = urlRow.createSpan({ cls: "spcalendar-icon" });
+          setIcon(urlIcon, "link");
+          urlRow.createEl("a", {
+            text: "Join / Open link",
+            href: e.url,
+            cls: "spcalendar-event-url",
+            attr: { target: "_blank", rel: "noopener noreferrer" },
+          });
+        }
+
+        if (e.description) {
+          const descEl = card.createDiv({ cls: "spcalendar-description" });
+          descEl.setText(e.description);
         }
 
         // Bottom action row (right-aligned)
@@ -487,7 +526,6 @@ export class CalendarView extends ItemView {
           : `${moment(event.start).format("h:mm A")} - ${moment(event.end).format("h:mm A")}`;
         const newTask = `- [ ] ${event.subject} (${timeStr})${event.location ? ` - ${event.location}` : ""}`;
 
-        let updated = content.trim();
         if (this.plugin.settings.addUnderHeading) {
           const heading = `## ${this.plugin.settings.headingName}`;
           const safeName = this.plugin.settings.headingName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -496,14 +534,11 @@ export class CalendarView extends ItemView {
             const lines = content.split("\n");
             const index = lines.findIndex((line) => headingRegex.test(line));
             lines.splice(index + 1, 0, "", newTask);
-            updated = lines.join("\n");
-          } else {
-            updated += `\n\n${heading}\n\n${newTask}`;
+            return lines.join("\n");
           }
-        } else {
-          updated += `\n${newTask}`;
+          return content + `\n\n${heading}\n\n${newTask}`;
         }
-        return updated;
+        return content + (content.endsWith("\n") ? "" : "\n") + newTask;
       });
       new Notice(`Added to ${dailyNote.basename} as a task.`);
     } catch (err) {

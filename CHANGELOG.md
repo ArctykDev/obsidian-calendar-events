@@ -2,6 +2,49 @@
 
 All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
+## [1.0.0] — Feature Update
+
+Released: 2026-09-28
+
+### Added
+
+- **Event URL support**  
+  Events with a `URL` property (Google Meet, Zoom, Teams links) now display a clickable "Join / Open link" on the event card.
+
+- **Event description support**  
+  `DESCRIPTION` is now parsed and displayed on event cards (capped at 3 lines with CSS `line-clamp`).
+
+- **Event search / filter**  
+  A search box in the header filters the event list in real time by title, location, or description.
+
+- **Auto-refresh**  
+  A new "Auto-refresh interval" setting (in minutes) keeps the calendar up to date without manual refreshes. Set to 0 to disable. Implemented via `registerInterval` for proper lifecycle management.
+
+- **EXDATE support**  
+  The parser now handles `EXDATE` properties, correctly hiding recurring event occurrences that are excluded by the calendar provider (previously these phantom occurrences were displayed).
+
+- **DURATION support**  
+  Events that specify `DURATION` instead of `DTEND` (allowed by RFC 5545) are now handled correctly. Previously these events showed as zero-length.
+
+### Fixed
+
+- **`content.trim()` removed from daily note insertion**  
+  The `Vault.process` callback was trimming the entire note content before appending, stripping intentional trailing whitespace. The task is now appended respecting the file's existing newline state.
+
+- **Event title tooltip**  
+  Long event titles that overflow the card now show a native tooltip with the full title text on hover.
+
+- **Mobile layout: `position: fixed` → `position: sticky`**  
+  The plugin header used `position: fixed` which breaks in Obsidian's mobile panel layout. Changed to `sticky` so the header scrolls correctly within the panel on both desktop and mobile. Removed the compensating `padding-top` hack from the wrapper.
+
+- **Dependency vulnerabilities resolved**  
+  Ran `npm audit fix` — 0 vulnerabilities remaining (was 4: 2 high, 2 moderate).
+
+- **Removed dead `firstRun` settings flag**  
+  The flag was set in defaults but never read; welcome state is determined by checking for configured calendars.
+
+---
+
 ## [0.9.0] — Obsidian Plugin Submission Prep
 
 Released: 2026-09-25
