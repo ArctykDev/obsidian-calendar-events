@@ -33,7 +33,7 @@ export default class ObsidianCalendarPlugin extends Plugin {
     // Refresh events
     this.addCommand({
       id: "oce-refresh-events",
-      name: "Refresh Calendar Events",
+      name: "Refresh events",
       callback: async () => {
         try {
           const enabled = this.settings.calendars.filter((c) => c.enabled);
@@ -167,7 +167,6 @@ export default class ObsidianCalendarPlugin extends Plugin {
         const events = await this.calendar.fetchEvents();
         await view.setEvents(events);
       } catch (err) {
-        console.warn("[OCE] Startup fetch failed:", err);
         await view.setEvents([]);
         new Notice(
           "Unable to load calendar events. Check your calendar URLs or network connection."
@@ -210,12 +209,9 @@ export default class ObsidianCalendarPlugin extends Plugin {
     // Add new icon only if setting enabled
     if (this.settings.showRibbonIcon) {
       this.ribbonEl = this.addRibbonIcon(
-        "calendar", // icon ID
+        "calendar",
         "Open Calendar Events",
-        async () => {
-          const leaf = await this.activateView();
-          this.app.workspace.revealLeaf(leaf);
-        }
+        () => { void this.activateView().then(leaf => this.app.workspace.revealLeaf(leaf)); }
       );
     }
   }
@@ -238,13 +234,15 @@ export default class ObsidianCalendarPlugin extends Plugin {
   // VIEW HANDLING
   // -----------------------------
   async activateView(): Promise<WorkspaceLeaf> {
-    let leaf =
-      this.app.workspace.getLeavesOfType(VIEW_TYPE_SPCALENDAR)[0] ||
-      this.app.workspace.getRightLeaf(false) ||
-      this.app.workspace.getLeaf(true);
-
+    const { workspace } = this.app;
+    const leaves = workspace.getLeavesOfType(VIEW_TYPE_SPCALENDAR);
+    if (leaves.length > 0) {
+      workspace.revealLeaf(leaves[0]);
+      return leaves[0];
+    }
+    const leaf = workspace.getRightLeaf(false) ?? workspace.getLeaf(false);
     await leaf.setViewState({ type: VIEW_TYPE_SPCALENDAR, active: true });
-    this.app.workspace.revealLeaf(leaf);
+    workspace.revealLeaf(leaf);
     return leaf;
   }
 
@@ -303,10 +301,7 @@ export default class ObsidianCalendarPlugin extends Plugin {
   }
 
   async saveSettings() {
-    // Optional cleanup: keep only the last 30 days of collapsed states
-    const today = new Date().toISOString().slice(0, 10);
     const keepDays = 30;
-
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - keepDays);
 
