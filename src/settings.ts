@@ -30,7 +30,7 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
     if (this.saveDebounceTimer !== null) window.clearTimeout(this.saveDebounceTimer);
     this.saveDebounceTimer = window.setTimeout(() => {
       this.saveDebounceTimer = null;
-      this.save();
+      void this.save();
     }, 500);
   }
 
@@ -68,7 +68,7 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
 
     const list = containerEl.createDiv();
     (this.settings.calendars ?? []).forEach((cal, i) => {
-      const row = new Setting(list)
+      new Setting(list)
         .setName(cal.name || `Calendar ${i + 1}`)
         .addText((t) =>
           t
@@ -341,8 +341,6 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
         alt: "Buy Me A Coffee"
       }
     });
-    coffeeImg.style.height = "40px";
-    coffeeImg.style.width = "145px";
-    coffeeImg.style.verticalAlign = "middle";
+    coffeeImg.setCssStyles({ height: "40px", width: "145px", verticalAlign: "middle" });
   }
 }

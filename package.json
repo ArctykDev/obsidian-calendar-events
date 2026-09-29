@@ -1,13 +1,13 @@
 {
   "name": "ical-calendar-events",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "module",
   "description": "Display and mange iCal (.ics) calendar events directly inside Obsidian.",
   "main": "main.js",
   "scripts": {
     "dev": "rollup -c --watch",
     "build": "rollup -c",
-    "clean": "rimraf dist build main.js main.js.map"
+    "clean": "node --eval \"['dist','build','main.js','main.js.map'].forEach(p=>{try{require('fs').rmSync(p,{recursive:true,force:true})}catch{}})\""
   },
   "keywords": [
     "obsidian",
@@ -27,7 +27,6 @@
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.6",
-    "rimraf": "^5.0.0",
     "rollup": "^4.60.0",
     "rollup-plugin-copy": "3.5.0",
     "tslib": "^2.6.2",

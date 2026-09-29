@@ -128,21 +128,23 @@ export class CalendarView extends ItemView {
       sortIndicator.classList.add("rotated");
     }
 
-    sortIndicator.addEventListener("click", async () => {
-      try {
-        const newOrder =
-          this.plugin.settings.sortOrder === "asc" ? "desc" : "asc";
-        this.plugin.settings.sortOrder = newOrder;
-        await this.plugin.saveSettings();
-        sortIndicator.classList.toggle("rotated", newOrder === "desc");
+    sortIndicator.addEventListener("click", () => {
+      void (async () => {
+        try {
+          const newOrder =
+            this.plugin.settings.sortOrder === "asc" ? "desc" : "asc";
+          this.plugin.settings.sortOrder = newOrder;
+          await this.plugin.saveSettings();
+          sortIndicator.classList.toggle("rotated", newOrder === "desc");
 
-        new Notice(`Sort order set to ${newOrder.toUpperCase()}.`);
-        const events = await this.plugin.calendar.fetchEvents();
-        await this.setEvents(events);
-      } catch (err) {
-        console.error("Error toggling sort:", err);
-        new Notice("Error updating sort order.");
-      }
+          new Notice(`Sort order set to ${newOrder.toUpperCase()}.`);
+          const events = await this.plugin.calendar.fetchEvents();
+          await this.setEvents(events);
+        } catch (err) {
+          console.error("Error toggling sort:", err);
+          new Notice("Error updating sort order.");
+        }
+      })();
     });
 
     // Right: Refresh + Settings
@@ -155,28 +157,30 @@ export class CalendarView extends ItemView {
     setIcon(refreshBtn, "refresh-cw");
     refreshBtn.setAttr("title", "Refresh Calendar Events");
 
-    refreshBtn.addEventListener("click", async () => {
-      try {
-        const enabledCalendars =
-          this.plugin.settings.calendars?.filter((c) => c.enabled) ?? [];
+    refreshBtn.addEventListener("click", () => {
+      void (async () => {
+        try {
+          const enabledCalendars =
+            this.plugin.settings.calendars?.filter((c) => c.enabled) ?? [];
 
-        if (enabledCalendars.length === 0) {
+          if (enabledCalendars.length === 0) {
+            await this.setEvents([]);
+            new Notice("No enabled calendars. Open settings to add one.");
+            return;
+          }
+
+          this.showLoading("Refreshing events...");
+          new Notice("Refreshing calendar...");
+
+          const events = await this.plugin.calendar.fetchEvents();
+          await this.setEvents(events);
+          new Notice("Calendar refreshed.");
+        } catch (err) {
+          console.error("Error refreshing calendar:", err);
+          new Notice("Error refreshing events.");
           await this.setEvents([]);
-          new Notice("No enabled calendars. Open settings to add one.");
-          return;
         }
-
-        this.showLoading("Refreshing events...");
-        new Notice("Refreshing calendar...");
-
-        const events = await this.plugin.calendar.fetchEvents();
-        await this.setEvents(events);
-        new Notice("Calendar refreshed.");
-      } catch (err) {
-        console.error("Error refreshing calendar:", err);
-        new Notice("Error refreshing events.");
-        await this.setEvents([]);
-      }
+      })();
     });
 
     // Collapse/Expand All button
@@ -195,7 +199,8 @@ export class CalendarView extends ItemView {
       allCollapsed ? "Expand All Days" : "Collapse All Days"
     );
 
-    toggleCollapseBtn.addEventListener("click", async () => {
+    toggleCollapseBtn.addEventListener("click", () => {
+      void (async () => {
       const currentlyCollapsed =
         Object.values(this.collapsedDays).length > 0 &&
         Object.values(this.collapsedDays).every((v) => v === true);
@@ -224,6 +229,7 @@ export class CalendarView extends ItemView {
 
       new Notice(newState ? "Collapsed all days" : "Expanded all days");
       this.render();
+      })();
     });
 
 
@@ -266,11 +272,13 @@ export class CalendarView extends ItemView {
           : "";
         toggle.classList.toggle("is-active", isVisible);
 
-        toggle.onclick = async () => {
-          this.visibleCalendars[cal.id] = !(this.visibleCalendars[cal.id] ?? true);
-          this.plugin.settings.visibleCalendars = this.visibleCalendars;
-          await this.plugin.saveSettings();
-          this.render();
+        toggle.onclick = () => {
+          void (async () => {
+            this.visibleCalendars[cal.id] = !(this.visibleCalendars[cal.id] ?? true);
+            this.plugin.settings.visibleCalendars = this.visibleCalendars;
+            await this.plugin.saveSettings();
+            this.render();
+          })();
         };
       }
     }
@@ -387,8 +395,8 @@ export class CalendarView extends ItemView {
         ? `Today — ${moment(day).format("dddd, MMMM Do YYYY")}`
         : moment(day).format("dddd, MMMM Do YYYY");
 
-      const headerLabel = headerRow.createEl("h3", { text: headerText });
-      const badge = headerRow.createEl("span", {
+      headerRow.createEl("h3", { text: headerText });
+      headerRow.createEl("span", {
         text: `${eventsForDay.length}`,
         cls: "spcalendar-badge",
       });
@@ -398,11 +406,13 @@ export class CalendarView extends ItemView {
       toggleIcon.textContent = this.collapsedDays[day] ? "▶" : "▼";
 
       // Clickable header area to toggle
-      headerRow.addEventListener("click", async () => {
-        this.collapsedDays[day] = !this.collapsedDays[day];
-        this.plugin.settings.collapsedDays = this.collapsedDays;
-        await this.plugin.saveSettings();
-        this.render();
+      headerRow.addEventListener("click", () => {
+        void (async () => {
+          this.collapsedDays[day] = !this.collapsedDays[day];
+          this.plugin.settings.collapsedDays = this.collapsedDays;
+          await this.plugin.saveSettings();
+          this.render();
+        })();
       });
 
 
@@ -482,9 +492,9 @@ export class CalendarView extends ItemView {
         setIcon(addBtn, "file-plus");
         addBtn.setAttr("title", "Add to Daily Note");
 
-        addBtn.addEventListener("click", async (ev) => {
+        addBtn.addEventListener("click", (ev) => {
           ev.stopPropagation();
-          await this.addEventToDailyNote(e);
+          void this.addEventToDailyNote(e);
         });
 
         // Optional calendar label

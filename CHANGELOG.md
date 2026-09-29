@@ -1,6 +1,24 @@
 # Changelog
 
-All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
+All notable changes to the **Calendar Events** plugin will be documented in this file.
+
+## [1.0.5] — Obsidian Linter Fixes
+
+Released: 2026-09-29
+
+Addresses all **errors** and most **warnings** flagged by the Obsidian plugin submission linter.
+
+### Fixed
+
+- **`no-unsupported-api`**: Rewrote `activateView()` using null-safe `getRightLeaf(false) ?? getLeaf(false)` pattern; removed `getLeaf(true)` (deprecated boolean overload). Fixed ribbon icon callback to use `void` instead of bare async.
+- **`no-static-styles-assignment`**: Replaced `coffeeImg.style.*` assignments with `setCssStyles()` in settings.
+- **`no-floating-promises`**: All async event handlers in `CalendarView` and `SettingsTab` now wrapped with `void (async () => {...})()` so promises are explicitly discarded.
+- **Command name includes plugin name**: "Refresh Calendar Events" → "Refresh events".
+- **Unused variables removed**: `today` (main.ts), `row` (settings.ts), `headerLabel`, `badge` (CalendarView.ts).
+- **Removed `rimraf`**: Replaced with native `node --eval` in the `clean` script.
+- **Removed stray `console.warn`** from startup fetch failure path.
+
+---
 
 ## [1.0.4] — Submission Fixes
 
