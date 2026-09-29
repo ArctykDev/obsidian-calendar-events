@@ -124,13 +124,13 @@ You can easily install this plugin using the BRAT (Beta Reviewers Auto-update Te
     manifest.json
     styles.css (if present)
     ```
-7. Restart Obsidian and enable Obsidian Calendar Events in the Community Plugins settings.
+7. Restart Obsidian and enable **Calendar Events** from the community plugins list.
 
 # Support
 
 If you have questions or would like to request a new feature, please visit the [Discussion board](https://github.com/ArctykDev/obsidian-calendar-events/discussions).
 
-Plugin Documentation coming soon. 
+For full documentation, visit the [GitHub repository](https://github.com/ArctykDev/obsidian-calendar-events).
 
 # Follow me
 
