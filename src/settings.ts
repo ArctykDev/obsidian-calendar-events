@@ -3,14 +3,18 @@ import ObsidianCalendarPlugin from "./main";
 import type { ObsidianCalendarSettings } from "./types";
 
 export const DEFAULT_SETTINGS: ObsidianCalendarSettings = {
-  calendars: [], // default empty array
+  calendars: [],
   daysBefore: 0,
   daysAhead: 7,
   sortOrder: "asc",
   pinToday: true,
   addUnderHeading: false,
   headingName: "Calendar Events",
-  firstRun: true,
+  autoRefreshInterval: 0,
+  showLocation: true,
+  showDescription: true,
+  showUrl: true,
+  showCalendarName: true,
   showRibbonIcon: true,
   visibleCalendars: {},
   collapsedDays: {},
@@ -49,7 +53,7 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
     // Version info row at the top
     const versionSetting = new Setting(containerEl)
       .setName(`v${this.plugin.manifest.version}`)
-      .setDesc("Calendar Events — iCal feed viewer for Obsidian");
+      .setDesc("Calendar Events — iCal feed viewer for Obsidian ");
 
     versionSetting.descEl.createEl("a", {
       text: "View changelog",
@@ -241,6 +245,54 @@ export class ObsidianCalendarSettingTab extends PluginSettingTab {
         );
     }
 
+    new Setting(containerEl)
+      .setName("Auto-refresh interval")
+      .setDesc("Automatically refresh events in the background. Set to 0 to disable.")
+      .addText((text) =>
+        text
+          .setPlaceholder("0")
+          .setValue(this.settings.autoRefreshInterval.toString())
+          .onChange((value) => {
+            const parsed = parseInt(value, 10);
+            this.settings.autoRefreshInterval = Math.max(isNaN(parsed) ? 0 : parsed, 0);
+            this.debouncedSave();
+            this.plugin.scheduleAutoRefresh();
+          })
+      )
+      .descEl.createSpan({ text: " minutes", cls: "setting-item-description" });
+
+    containerEl.createEl("hr");
+    new Setting(containerEl).setName("Event card display").setHeading();
+
+    new Setting(containerEl)
+      .setName("Show location")
+      .setDesc("Display the event location on each card.")
+      .addToggle((t) => t.setValue(this.settings.showLocation).onChange(async (v) => {
+        this.settings.showLocation = v; await this.save();
+      }));
+
+    new Setting(containerEl)
+      .setName("Show description")
+      .setDesc("Display the event description (up to 3 lines) on each card.")
+      .addToggle((t) => t.setValue(this.settings.showDescription).onChange(async (v) => {
+        this.settings.showDescription = v; await this.save();
+      }));
+
+    new Setting(containerEl)
+      .setName("Show meeting link")
+      .setDesc("Display a clickable URL when the event has one (e.g. Zoom, Teams, Meet).")
+      .addToggle((t) => t.setValue(this.settings.showUrl).onChange(async (v) => {
+        this.settings.showUrl = v; await this.save();
+      }));
+
+    new Setting(containerEl)
+      .setName("Show calendar name")
+      .setDesc("Display the source calendar name at the bottom of each card.")
+      .addToggle((t) => t.setValue(this.settings.showCalendarName).onChange(async (v) => {
+        this.settings.showCalendarName = v; await this.save();
+      }));
+
+    containerEl.createEl("hr");
     new Setting(containerEl)
       .setName("Show ribbon icon")
       .setDesc("Adds a calendar icon to the Obsidian ribbon for quick access.")

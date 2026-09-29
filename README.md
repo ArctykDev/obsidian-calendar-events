@@ -80,7 +80,7 @@ You can easily install this plugin using the BRAT (Beta Reviewers Auto-update Te
 2. Extract the archive into your vault’s plugin folder:
 
    ```bash
-   .obsidian/plugins/obsidian-calendar-events/
+   .obsidian/plugins/ical-calendar-events/
    ```
 3. Ensure the folder contains the following files:
 
@@ -115,7 +115,7 @@ You can easily install this plugin using the BRAT (Beta Reviewers Auto-update Te
 5. Copy the following files to your vault’s plugin folder:
 
    ```bash
-   <vault>/.obsidian/plugins/obsidian-calendar-events/
+   <vault>/.obsidian/plugins/ical-calendar-events/
    ```
 6. Include:
 

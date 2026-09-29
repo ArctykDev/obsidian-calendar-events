@@ -18,6 +18,7 @@ export class CalendarView extends ItemView {
   private updateTimer: number | null = null;
   private scrollTimer: number | null = null;
   private collapsedDays: Record<string, boolean> = {};
+  private searchQuery = "";
 
   constructor(leaf: WorkspaceLeaf, plugin: ObsidianCalendarPlugin) {
     super(leaf);
@@ -72,7 +73,8 @@ export class CalendarView extends ItemView {
     container.empty();
 
     const wrapper = container.createDiv({ cls: "spcalendar-wrapper" });
-    const loadingDiv = wrapper.createDiv({ cls: "spcalendar-loading" });
+    const content = wrapper.createDiv({ cls: "spcalendar-content" });
+    const loadingDiv = content.createDiv({ cls: "spcalendar-loading" });
     loadingDiv.createEl("p", { text: message });
   }
 
@@ -91,6 +93,15 @@ export class CalendarView extends ItemView {
     for (const ev of this.events) {
       if (ev.calendarId && this.visibleCalendars[ev.calendarId] === false) continue;
       if (!ev?.start) continue;
+      // Apply search filter
+      if (this.searchQuery) {
+        const q = this.searchQuery.toLowerCase();
+        const matches =
+          ev.subject?.toLowerCase().includes(q) ||
+          ev.location?.toLowerCase().includes(q) ||
+          ev.description?.toLowerCase().includes(q);
+        if (!matches) continue;
+      }
       const day = moment(ev.start).isValid()
         ? moment(ev.start).format("YYYY-MM-DD")
         : "unknown";
@@ -100,37 +111,9 @@ export class CalendarView extends ItemView {
 
     const wrapper = container.createDiv({ cls: "spcalendar-wrapper" });
 
-    // HEADER BAR ---------------------------------------------------
+    // HEADER BAR (non-scrolling) -----------------------------------
     const header = wrapper.createDiv({ cls: "spcalendar-header" });
-
-    // Calendar visibility toggles
     const enabledCalendars = this.plugin.settings.calendars?.filter((c) => c.enabled) ?? [];
-    if (enabledCalendars.length > 1) {
-      const toggleBar = wrapper.createDiv({ cls: "spcalendar-togglebar" });
-
-      for (const cal of enabledCalendars) {
-        const isVisible = this.visibleCalendars[cal.id] ?? true;
-
-        const toggle = toggleBar.createEl("button", {
-          text: cal.name,
-          cls: "spcalendar-cal-toggle",
-        });
-        toggle.style.backgroundColor = isVisible
-          ? cal.color || "var(--interactive-accent)"
-          : "";
-        toggle.classList.toggle("is-active", isVisible);
-
-        toggle.onclick = async () => {
-          // Read current state at click time, not captured creation-time value
-          this.visibleCalendars[cal.id] = !(this.visibleCalendars[cal.id] ?? true);
-          this.plugin.settings.visibleCalendars = this.visibleCalendars;
-          await this.plugin.saveSettings();
-          this.render();
-        };
-      }
-    }
-
-
 
     // Left: Title + Sort
     const leftSection = header.createDiv({ cls: "spcalendar-header-left" });
@@ -252,12 +235,52 @@ export class CalendarView extends ItemView {
     settingsBtn.setAttr("title", "Open Calendar Settings");
     settingsBtn.addEventListener("click", () => this.plugin.openSettingsTab());
 
+    // SEARCH ROW (non-scrolling) ------------------------------------
+    const searchRow = wrapper.createDiv({ cls: "spcalendar-search-row" });
+    const searchInput = searchRow.createEl("input", {
+      cls: "spcalendar-search",
+      attr: { type: "text", placeholder: "Search events…", "aria-label": "Search events" },
+    });
+    searchInput.value = this.searchQuery;
+    searchInput.addEventListener("input", () => {
+      this.searchQuery = searchInput.value;
+      this.render();
+    });
+
+    // SCROLLABLE CONTENT AREA ---------------------------------------
+    const content = wrapper.createDiv({ cls: "spcalendar-content" });
+
+    // Calendar visibility toggles
+    if (enabledCalendars.length > 1) {
+      const toggleBar = content.createDiv({ cls: "spcalendar-togglebar" });
+
+      for (const cal of enabledCalendars) {
+        const isVisible = this.visibleCalendars[cal.id] ?? true;
+
+        const toggle = toggleBar.createEl("button", {
+          text: cal.name,
+          cls: "spcalendar-cal-toggle",
+        });
+        toggle.style.backgroundColor = isVisible
+          ? cal.color || "var(--interactive-accent)"
+          : "";
+        toggle.classList.toggle("is-active", isVisible);
+
+        toggle.onclick = async () => {
+          this.visibleCalendars[cal.id] = !(this.visibleCalendars[cal.id] ?? true);
+          this.plugin.settings.visibleCalendars = this.visibleCalendars;
+          await this.plugin.saveSettings();
+          this.render();
+        };
+      }
+    }
+
     // RANGE LABEL ---------------------------------------------------
     const calendarsConfigured =
       this.plugin.settings.calendars?.filter((c) => c.enabled).length > 0;
 
     if (calendarsConfigured) {
-      const rangeContainer = wrapper.createDiv({ cls: "spcalendar-range" });
+      const rangeContainer = content.createDiv({ cls: "spcalendar-range" });
       const { daysBefore = 0, daysAhead = 7 } = this.plugin.settings;
       const start = new Date();
       start.setDate(start.getDate() - daysBefore);
@@ -274,7 +297,7 @@ export class CalendarView extends ItemView {
       );
 
       if (this.lastUpdated) {
-        const updatedDiv = wrapper.createDiv({ cls: "spcalendar-updated" });
+        const updatedDiv = content.createDiv({ cls: "spcalendar-updated" });
         const updateLabel = () => {
           const now = new Date();
           const diffMs = now.getTime() - this.lastUpdated!.getTime();
@@ -311,7 +334,7 @@ export class CalendarView extends ItemView {
 
     // EMPTY STATE ---------------------------------------------------
     if (!this.events.length) {
-      const empty = wrapper.createDiv({ cls: "spcalendar-empty" });
+      const empty = content.createDiv({ cls: "spcalendar-empty" });
 
       if (!calendarsConfigured) {
         empty.createEl("h3", { text: "Welcome to Obsidian Calendar Events!" });
@@ -352,7 +375,7 @@ export class CalendarView extends ItemView {
       );
 
       const isToday = day === todayKey;
-      const dayContainer = wrapper.createDiv({
+      const dayContainer = content.createDiv({
         cls: `spcalendar-day${isToday ? " spcalendar-today" : ""}`,
       });
 
@@ -403,6 +426,7 @@ export class CalendarView extends ItemView {
         titleRow.createSpan({
           text: e.subject || "(no title)",
           cls: "spcalendar-event-title",
+          attr: { title: e.subject || "(no title)" },
         });
 
         // Recurring indicator
@@ -421,7 +445,7 @@ export class CalendarView extends ItemView {
           cls: "spcalendar-time-text",
         });
 
-        if (e.location) {
+        if (e.location && this.plugin.settings.showLocation) {
           const locRow = card.createDiv({ cls: "spcalendar-row" });
           const locIcon = locRow.createSpan({ cls: "spcalendar-icon" });
           setIcon(locIcon, "map-pin");
@@ -429,6 +453,23 @@ export class CalendarView extends ItemView {
             text: e.location,
             cls: "spcalendar-location-text",
           });
+        }
+
+        if (e.url && this.plugin.settings.showUrl) {
+          const urlRow = card.createDiv({ cls: "spcalendar-row" });
+          const urlIcon = urlRow.createSpan({ cls: "spcalendar-icon" });
+          setIcon(urlIcon, "link");
+          urlRow.createEl("a", {
+            text: "Join / Open link",
+            href: e.url,
+            cls: "spcalendar-event-url",
+            attr: { target: "_blank", rel: "noopener noreferrer" },
+          });
+        }
+
+        if (e.description && this.plugin.settings.showDescription) {
+          const descEl = card.createDiv({ cls: "spcalendar-description" });
+          descEl.setText(e.description);
         }
 
         // Bottom action row (right-aligned)
@@ -447,7 +488,7 @@ export class CalendarView extends ItemView {
         });
 
         // Optional calendar label
-        if (e.calendarName) {
+        if (e.calendarName && this.plugin.settings.showCalendarName) {
           const source = card.createDiv({ cls: "spcalendar-row" });
           const dot = source.createSpan({ cls: "spcalendar-cal-dot" });
           dot.style.backgroundColor = e.color || "var(--interactive-accent)";
@@ -487,7 +528,6 @@ export class CalendarView extends ItemView {
           : `${moment(event.start).format("h:mm A")} - ${moment(event.end).format("h:mm A")}`;
         const newTask = `- [ ] ${event.subject} (${timeStr})${event.location ? ` - ${event.location}` : ""}`;
 
-        let updated = content.trim();
         if (this.plugin.settings.addUnderHeading) {
           const heading = `## ${this.plugin.settings.headingName}`;
           const safeName = this.plugin.settings.headingName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -496,14 +536,11 @@ export class CalendarView extends ItemView {
             const lines = content.split("\n");
             const index = lines.findIndex((line) => headingRegex.test(line));
             lines.splice(index + 1, 0, "", newTask);
-            updated = lines.join("\n");
-          } else {
-            updated += `\n\n${heading}\n\n${newTask}`;
+            return lines.join("\n");
           }
-        } else {
-          updated += `\n${newTask}`;
+          return content + `\n\n${heading}\n\n${newTask}`;
         }
-        return updated;
+        return content + (content.endsWith("\n") ? "" : "\n") + newTask;
       });
       new Notice(`Added to ${dailyNote.basename} as a task.`);
     } catch (err) {

@@ -31,9 +31,16 @@ export interface ObsidianCalendarSettings {
   // The heading name under which events are added
   headingName: string;
 
-  firstRun?: boolean;
-
   showRibbonIcon?: boolean;
+
+  // Auto-refresh interval in minutes (0 = disabled)
+  autoRefreshInterval: number;
+
+  // Event card display toggles
+  showLocation: boolean;
+  showDescription: boolean;
+  showUrl: boolean;
+  showCalendarName: boolean;
 
   // Persisted map of calendar visibility states
   visibleCalendars?: Record<string, boolean>;
@@ -52,6 +59,8 @@ export interface CalendarEvent {
   start: string;
   end: string;
   location?: string;
+  description?: string;
+  url?: string;
   isAllDay?: boolean;
   isRecurring?: boolean;
 

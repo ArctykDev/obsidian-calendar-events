@@ -8,7 +8,8 @@ export default class ObsidianCalendarPlugin extends Plugin {
   settings!: ObsidianCalendarSettings;
   calendar!: CalendarClient;
 
-  private ribbonEl: HTMLElement | null = null;   // <-- NEW
+  private ribbonEl: HTMLElement | null = null;
+  private autoRefreshTimer: number | null = null;
 
   async onload() {
     // Load saved settings (and migrate old single-calendar configs)
@@ -155,7 +156,6 @@ export default class ObsidianCalendarPlugin extends Plugin {
         this.settings.calendars?.filter((c) => c.enabled && c.url.trim()) ?? [];
 
       if (enabledCalendars.length === 0) {
-        console.log("[OCE] No calendars configured — showing setup state.");
         await view.setEvents([]);
         new Notice(
           "No calendars configured. Open plugin settings to add one or more calendars."
@@ -173,7 +173,28 @@ export default class ObsidianCalendarPlugin extends Plugin {
           "Unable to load calendar events. Check your calendar URLs or network connection."
         );
       }
+
+      this.scheduleAutoRefresh();
     });
+  }
+
+  scheduleAutoRefresh() {
+    if (this.autoRefreshTimer !== null) {
+      window.clearInterval(this.autoRefreshTimer);
+      this.autoRefreshTimer = null;
+    }
+    const minutes = this.settings.autoRefreshInterval ?? 0;
+    if (minutes <= 0) return;
+    this.autoRefreshTimer = this.registerInterval(
+      window.setInterval(async () => {
+        const sources = this.settings.calendars?.filter((c) => c.enabled && c.url.trim()) ?? [];
+        if (!sources.length) return;
+        try {
+          const events = await this.calendar.fetchEvents();
+          await this.pushToView(events);
+        } catch { /* silent — user already sees per-calendar notices */ }
+      }, minutes * 60 * 1000)
+    );
   }
 
   // -----------------------------
@@ -203,7 +224,10 @@ export default class ObsidianCalendarPlugin extends Plugin {
   // PLUGIN UNLOAD
   // -----------------------------
   onunload() {
-    // Clean up ribbon icon
+    if (this.autoRefreshTimer !== null) {
+      window.clearInterval(this.autoRefreshTimer);
+      this.autoRefreshTimer = null;
+    }
     if (this.ribbonEl) {
       this.ribbonEl.detach();
       this.ribbonEl = null;

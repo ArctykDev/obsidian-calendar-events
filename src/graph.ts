@@ -148,6 +148,23 @@ function toISO(val: string, tz?: string): string | null {
   }
 }
 
+/** Parses an RFC 5545 DURATION string to milliseconds. Handles PnDTnHnMnS and PnW. */
+function parseDuration(dur: string): number {
+  const weeks  = dur.match(/(-?\d+)W/);
+  const days   = dur.match(/(-?\d+)D/);
+  const hours  = dur.match(/T.*?(\d+)H/);
+  const mins   = dur.match(/T.*?(\d+)M/);
+  const secs   = dur.match(/T.*?(\d+)S/);
+  const sign   = dur.startsWith("-") ? -1 : 1;
+  return sign * (
+    (weeks  ? parseInt(weeks[1])  * 7 * 86400000 : 0) +
+    (days   ? parseInt(days[1])   *     86400000 : 0) +
+    (hours  ? parseInt(hours[1])  *     3600000  : 0) +
+    (mins   ? parseInt(mins[1])   *     60000    : 0) +
+    (secs   ? parseInt(secs[1])   *     1000     : 0)
+  );
+}
+
 /**
  * Full-featured ICS parser with:
  * - TZID support
@@ -185,7 +202,11 @@ function parseICS(
     let recurrenceId = "",
       recurrenceTz = "";
     let rrule = "";
+    let duration = "";
     let location = "";
+    let description = "";
+    let url = "";
+    const exdates: string[] = [];
     let canceled = false;
 
     for (const line of lines) {
@@ -195,7 +216,19 @@ function parseICS(
       else if (line.startsWith("LOCATION"))
         location = unescapeText(line.split(":").slice(1).join(":").trim());
       else if (line.startsWith("STATUS:CANCELLED")) canceled = true;
-      else if (line.startsWith("DTSTART")) {
+      else if (line.startsWith("DESCRIPTION"))
+        description = unescapeText(line.split(":").slice(1).join(":").trim());
+      else if (line.startsWith("URL"))
+        url = line.split(":").slice(1).join(":").trim();
+      else if (line.startsWith("DURATION:")) duration = line.substring(9).trim();
+      else if (line.startsWith("EXDATE")) {
+        // EXDATE can have a TZID param and comma-separated dates
+        const { value: exVal, tz: exTz } = readProp(line);
+        for (const d of exVal.split(",")) {
+          const iso = toISO(d.trim(), exTz);
+          if (iso) exdates.push(iso);
+        }
+      } else if (line.startsWith("DTSTART")) {
         const { value, tz } = readProp(line);
         start = value;
         startTz = tz || "";
@@ -212,7 +245,11 @@ function parseICS(
     }
 
     const startISO = toISO(start, startTz || undefined);
-    const endISO = toISO(end, endTz || undefined);
+    let endISO = toISO(end, endTz || undefined);
+    // Fall back to DURATION when DTEND is absent
+    if (!endISO && duration && startISO) {
+      endISO = new Date(new Date(startISO).getTime() + parseDuration(duration)).toISOString();
+    }
     // DATE-only values (no T) indicate all-day events
     const isAllDay = !!start && !start.includes("T");
 
@@ -221,12 +258,20 @@ function parseICS(
       continue;
     }
 
+    // Register EXDATE cancellations for recurring events
+    if (exdates.length) {
+      cancelledInstances[uid] = cancelledInstances[uid] || [];
+      for (const d of exdates) cancelledInstances[uid].push(d);
+    }
+
     // Master recurring event
     if (rrule && !recurrenceId) {
       recurringMasters[uid] = {
         uid,
         summary,
         location,
+        description,
+        url,
         startISO,
         endISO,
         rrule,
@@ -258,6 +303,8 @@ function parseICS(
         start: startISO,
         end: endISO || startISO,
         location,
+        description: description || undefined,
+        url: url || undefined,
         isAllDay,
         isRecurring: true,
       };
@@ -277,6 +324,8 @@ function parseICS(
         isAllDay,
         isRecurring: false,
         location,
+        description: description || undefined,
+        url: url || undefined,
       });
     }
   }
@@ -370,6 +419,8 @@ function parseICS(
         start: startDateISO,
         end: endDateISO,
         location: m.location,
+        description: m.description || undefined,
+        url: m.url || undefined,
         isAllDay: m.isAllDay,
         isRecurring: true,
       });

@@ -18,7 +18,7 @@ npm run build   # Production build → outputs main.js to plugin root
 npm run clean   # Remove build artifacts
 ```
 
-**Build system:** Rollup bundles TypeScript → CommonJS (`main.js`). The [rollup.config.js](../rollup.config.js) copies `src/styles.css` to root during build. Output files (`main.js`, `manifest.json`, `styles.css`) must exist in vault's `.obsidian/plugins/obsidian-calendar-events/` to load.
+**Build system:** Rollup bundles TypeScript → CommonJS (`main.js`). The [rollup.config.js](../rollup.config.js) copies `src/styles.css` to root during build. Output files (`main.js`, `manifest.json`, `styles.css`) must exist in vault's `.obsidian/plugins/ical-calendar-events/` to load.
 
 **Testing:** Develop by building into an active vault's plugin folder. Reload Obsidian after changes (Ctrl+R in dev mode).
 

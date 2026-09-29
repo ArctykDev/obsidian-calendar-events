@@ -2,6 +2,87 @@
 
 All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
+## [1.0.3] — CSS Layout Fix
+
+Released: 2026-09-28
+
+### Fixed
+
+- **Header missing and events not scrollable after 1.0.2**  
+  A previous CSS replacement wrote `\n` as literal characters instead of newlines, corrupting the `.spcalendar-wrapper` selector. This made the entire rule unparseable — the wrapper had no flex layout, no height, and no overflow — causing the header to be invisible and the event list to not scroll. The wrapper, content, and header CSS have been fully rewritten cleanly.
+
+---
+
+## [1.0.2] — Scroll Fix
+
+Released: 2026-09-28
+
+### Fixed
+
+- **Event list no longer scrollable after 1.0.1**  
+  The `position: sticky` header inside an `overflow-y: auto` flex container is a known Chromium/Electron issue that collapses the scroll container entirely. The layout has been restructured: the header and search row are now `flex-shrink: 0` elements above a dedicated `spcalendar-content` scroll area, which is the sole scroll container. The header no longer needs `sticky` or `fixed` positioning since it always sits above the scroll region.
+
+---
+
+## [1.0.1] — Display Settings & Search Layout
+
+Released: 2026-09-28
+
+### Added
+
+- **Event card display settings**  
+  A new "Event card display" section in settings lets you individually show or hide location, description, meeting URL, and calendar name on event cards. All fields remain visible by default.
+
+### Improved
+
+- **Search bar moved to its own row**  
+  The search input has been moved from the header button row into a dedicated sticky row directly below the header, decluttering the toolbar and giving the search field full-width space.
+
+---
+
+## [1.0.0] — Feature Update
+
+Released: 2026-09-28
+
+### Added
+
+- **Event URL support**  
+  Events with a `URL` property (Google Meet, Zoom, Teams links) now display a clickable "Join / Open link" on the event card.
+
+- **Event description support**  
+  `DESCRIPTION` is now parsed and displayed on event cards (capped at 3 lines with CSS `line-clamp`).
+
+- **Event search / filter**  
+  A search box in the header filters the event list in real time by title, location, or description.
+
+- **Auto-refresh**  
+  A new "Auto-refresh interval" setting (in minutes) keeps the calendar up to date without manual refreshes. Set to 0 to disable. Implemented via `registerInterval` for proper lifecycle management.
+
+- **EXDATE support**  
+  The parser now handles `EXDATE` properties, correctly hiding recurring event occurrences that are excluded by the calendar provider (previously these phantom occurrences were displayed).
+
+- **DURATION support**  
+  Events that specify `DURATION` instead of `DTEND` (allowed by RFC 5545) are now handled correctly. Previously these events showed as zero-length.
+
+### Fixed
+
+- **`content.trim()` removed from daily note insertion**  
+  The `Vault.process` callback was trimming the entire note content before appending, stripping intentional trailing whitespace. The task is now appended respecting the file's existing newline state.
+
+- **Event title tooltip**  
+  Long event titles that overflow the card now show a native tooltip with the full title text on hover.
+
+- **Mobile layout: `position: fixed` → `position: sticky`**  
+  The plugin header used `position: fixed` which breaks in Obsidian's mobile panel layout. Changed to `sticky` so the header scrolls correctly within the panel on both desktop and mobile. Removed the compensating `padding-top` hack from the wrapper.
+
+- **Dependency vulnerabilities resolved**  
+  Ran `npm audit fix` — 0 vulnerabilities remaining (was 4: 2 high, 2 moderate).
+
+- **Removed dead `firstRun` settings flag**  
+  The flag was set in defaults but never read; welcome state is determined by checking for configured calendars.
+
+---
+
 ## [0.9.0] — Obsidian Plugin Submission Prep
 
 Released: 2026-09-25
