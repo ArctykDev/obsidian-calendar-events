@@ -2,6 +2,20 @@
 
 All notable changes to the **Obsidian Calendar Events** plugin will be documented in this file.
 
+## [1.0.4] — Submission Fixes
+
+Released: 2026-09-29
+
+### Fixed
+
+- **Release manifest version was corrupted for bare version tags**  
+  The CI version extraction `${GITHUB_REF#refs/tags/v}` only strips the `v` prefix when it is present. For bare tags like `1.0.3`, `GITHUB_REF` is `refs/tags/1.0.3` and the entire string was passed as the version, producing `refs/tags/1.0.3` in the release manifest. Fixed by first stripping `refs/tags/` then optionally stripping `v`.
+
+- **README placeholder text removed**  
+  "Plugin Documentation coming soon." and an old plugin name reference were flagged by the Obsidian submission scanner. Both replaced with accurate content.
+
+---
+
 ## [1.0.3] — CSS Layout Fix
 
 Released: 2026-09-28
